@@ -21,6 +21,7 @@
     const { useState, useEffect } = React;
 
     const EXERCISE_DB = [
+      // LOWER
       { id: 'l1', name: 'Barbell Back Squat', category: 'Lower', equipment: 'Full Gym', defaultSets: 3, defaultReps: 5 },
       { id: 'l2', name: 'Romanian Deadlift (RDL)', category: 'Lower', equipment: 'Full Gym', defaultSets: 3, defaultReps: 8 },
       { id: 'l3', name: 'Dumbbell Lunges', category: 'Lower', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 12 },
@@ -28,7 +29,13 @@
       { id: 'l5', name: 'Goblet Squat', category: 'Lower', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 12 },
       { id: 'l6', name: 'Bulgarian Split Squat', category: 'Lower', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 8 },
       { id: 'l7', name: 'Glute Bridge', category: 'Lower', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 15 },
+      { id: 'l8', name: 'Front Squat', category: 'Lower', equipment: 'Full Gym', defaultSets: 3, defaultReps: 6 },
+      { id: 'l9', name: 'Calf Raises', category: 'Lower', equipment: 'Full Gym', defaultSets: 4, defaultReps: 15 },
+      { id: 'l10', name: 'Hamstring Curls', category: 'Lower', equipment: 'Full Gym', defaultSets: 3, defaultReps: 12 },
+      { id: 'l11', name: 'Box Jumps', category: 'Lower', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 8 },
+      { id: 'l12', name: 'Walking Lunges', category: 'Lower', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 20 },
       
+      // UPPER
       { id: 'u1', name: 'Barbell Bench Press', category: 'Upper', equipment: 'Full Gym', defaultSets: 4, defaultReps: 5 },
       { id: 'u2', name: 'Incline DB Press', category: 'Upper', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 10 },
       { id: 'u3', name: 'Pull-ups', category: 'Upper', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 8 },
@@ -37,17 +44,31 @@
       { id: 'u6', name: 'Barbell Row', category: 'Upper', equipment: 'Full Gym', defaultSets: 3, defaultReps: 8 },
       { id: 'u7', name: 'Push-ups', category: 'Upper', equipment: 'Bodyweight', defaultSets: 4, defaultReps: 15 },
       { id: 'u8', name: 'Dips', category: 'Upper', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 10 },
+      { id: 'u9', name: 'Arnold Press', category: 'Upper', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 10 },
+      { id: 'u10', name: 'Face Pulls', category: 'Upper', equipment: 'Full Gym', defaultSets: 3, defaultReps: 15 },
+      { id: 'u11', name: 'Hammer Curls', category: 'Upper', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 12 },
+      { id: 'u12', name: 'Tricep Extensions', category: 'Upper', equipment: 'Full Gym', defaultSets: 3, defaultReps: 12 },
+      { id: 'u13', name: 'Lateral Raises', category: 'Upper', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 15 },
 
+      // CORE
       { id: 'c1', name: 'Cable Woodchops', category: 'Core', equipment: 'Full Gym', defaultSets: 3, defaultReps: 12 },
       { id: 'c2', name: 'Plank', category: 'Core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 60 },
       { id: 'c3', name: 'Russian Twists', category: 'Core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 20 },
       { id: 'c4', name: 'Hanging Leg Raises', category: 'Core', equipment: 'Full Gym', defaultSets: 3, defaultReps: 10 },
       { id: 'c5', name: 'Ab Wheel Rollout', category: 'Core', equipment: 'Full Gym', defaultSets: 3, defaultReps: 8 },
+      { id: 'c6', name: 'Dead Bugs', category: 'Core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 12 },
+      { id: 'c7', name: 'Bicycle Crunches', category: 'Core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 20 },
+      { id: 'c8', name: 'V-Ups', category: 'Core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 15 },
+      { id: 'c9', name: 'Pallof Press', category: 'Core', equipment: 'Full Gym', defaultSets: 3, defaultReps: 12 },
 
+      // FULL BODY
       { id: 'f1', name: 'Kettlebell Swings', category: 'Full', equipment: 'Dumbbells', defaultSets: 4, defaultReps: 15 },
       { id: 'f2', name: 'Thrusters', category: 'Full', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 10 },
       { id: 'f3', name: 'Burpees', category: 'Full', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 15 },
-      { id: 'f4', name: 'Power Cleans', category: 'Full', equipment: 'Full Gym', defaultSets: 5, defaultReps: 3 }
+      { id: 'f4', name: 'Power Cleans', category: 'Full', equipment: 'Full Gym', defaultSets: 5, defaultReps: 3 },
+      { id: 'f5', name: 'Clean and Jerk', category: 'Full', equipment: 'Full Gym', defaultSets: 5, defaultReps: 3 },
+      { id: 'f6', name: 'Man Makers', category: 'Full', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 8 },
+      { id: 'f7', name: 'Farmer\'s Carry', category: 'Full', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 60 }
     ];
 
     const CATEGORIES = ['Lower', 'Upper', 'Core', 'Full'];
@@ -209,7 +230,7 @@
         return () => clearInterval(interval);
       }, [restEndTime]);
 
-      const SetupView = () => (
+      const renderSetupView = () => (
         <div className="flex flex-col h-full overflow-y-auto pb-8 bg-[#1E1410]">
           <div className="p-6 pt-12 pb-8 bg-[#2D1D16] border-b border-[#593D2C] rounded-b-[40px] mb-6 shadow-xl">
             <h1 className="text-4xl font-black tracking-tighter text-[#F5EDE6] flex items-center gap-2">Fit<span className="text-[#AF4722]">Forge</span></h1>
@@ -247,7 +268,7 @@
         </div>
       );
 
-      const WorkoutView = () => {
+      const renderWorkoutView = () => {
         const isWorkoutComplete = workoutPlan.length > 0 && workoutPlan.every(ex => ex.sets.every(set => set.completed));
         const groupedWorkout = [];
         let currentGroup = null;
@@ -296,12 +317,34 @@
                                 {ex.sets.map((set, setIdx) => (
                                   <div key={set.id} className={`grid grid-cols-12 gap-2 px-2 py-2 items-center rounded-lg ${set.completed ? 'bg-[#5E2B16]/40' : ''}`}>
                                     <div className="col-span-2 text-center font-bold text-[#D1B8A3] text-sm">{setIdx + 1}</div>
-                                    <div className="col-span-4"><input type="number" placeholder="-" value={set.weight} onChange={(e) => updateSetData(exIdx, setIdx, 'weight', e.target.value)} disabled={set.completed} className={`w-full bg-[#1E1410] font-bold py-2 px-1 text-center rounded-lg border focus:outline-none ${set.completed ? 'text-[#E37036] border-transparent opacity-50' : 'text-[#F5EDE6] border-[#593D2C]'}`} /></div>
-                                    <div className="col-span-4"><input type="number" placeholder="-" value={set.reps} onChange={(e) => updateSetData(exIdx, setIdx, 'reps', e.target.value)} disabled={set.completed} className={`w-full bg-[#1E1410] font-bold py-2 px-1 text-center rounded-lg border focus:outline-none ${set.completed ? 'text-[#E37036] border-transparent opacity-50' : 'text-[#F5EDE6] border-[#593D2C]'}`} /></div>
-                                    <div className="col-span-2 flex justify-center"><button onClick={() => toggleSetComplete(exIdx, setIdx)} className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${set.completed ? 'bg-[#AF4722] text-[#F5EDE6]' : 'bg-[#3E291F] text-[#D1B8A3]'}`}>{set.completed && '✓'}</button></div>
+                                    <div className="col-span-4">
+                                      <input 
+                                        type="number" 
+                                        inputMode="decimal"
+                                        pattern="[0-9]*"
+                                        placeholder="-" 
+                                        value={set.weight} 
+                                        onChange={(e) => updateSetData(exIdx, setIdx, 'weight', e.target.value)} 
+                                        disabled={set.completed} 
+                                        className={`w-full bg-[#1E1410] font-bold py-3 px-1 text-center rounded-lg border focus:outline-none ${set.completed ? 'text-[#E37036] border-transparent opacity-50' : 'text-[#F5EDE6] border-[#593D2C] focus:border-[#E37036]'}`} 
+                                      />
+                                    </div>
+                                    <div className="col-span-4">
+                                      <input 
+                                        type="number" 
+                                        inputMode="decimal"
+                                        pattern="[0-9]*"
+                                        placeholder="-" 
+                                        value={set.reps} 
+                                        onChange={(e) => updateSetData(exIdx, setIdx, 'reps', e.target.value)} 
+                                        disabled={set.completed} 
+                                        className={`w-full bg-[#1E1410] font-bold py-3 px-1 text-center rounded-lg border focus:outline-none ${set.completed ? 'text-[#E37036] border-transparent opacity-50' : 'text-[#F5EDE6] border-[#593D2C] focus:border-[#E37036]'}`} 
+                                      />
+                                    </div>
+                                    <div className="col-span-2 flex justify-center"><button onClick={() => toggleSetComplete(exIdx, setIdx)} className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold ${set.completed ? 'bg-[#AF4722] text-[#F5EDE6]' : 'bg-[#3E291F] text-[#D1B8A3]'}`}>{set.completed && '✓'}</button></div>
                                   </div>
                                 ))}
-                                <div className="px-2 mt-2"><button onClick={() => addSet(exIdx)} className="w-full py-2 text-xs font-bold text-[#D1B8A3] bg-[#1E1410] rounded-lg border border-dashed border-[#593D2C]">+ ADD SET</button></div>
+                                <div className="px-2 mt-2"><button onClick={() => addSet(exIdx)} className="w-full py-3 text-xs font-bold text-[#D1B8A3] bg-[#1E1410] rounded-lg border border-dashed border-[#593D2C]">+ ADD SET</button></div>
                               </div>
                             )}
                           </div>
@@ -358,7 +401,7 @@
         );
       };
 
-      const SummaryView = () => {
+      const renderSummaryView = () => {
         const elapsedMinutes = workoutStartTime ? Math.round((Date.now() - workoutStartTime) / 60000) : 0;
         return (
           <div className="flex flex-col h-full bg-[#1E1410] p-6 justify-center items-center text-center">
@@ -376,9 +419,9 @@
       return (
         <div className="w-full min-h-screen bg-[#1A110D] text-[#F5EDE6] font-sans flex justify-center">
           <div className="w-full max-w-md h-screen relative shadow-2xl overflow-hidden flex flex-col bg-[#1E1410]">
-            {currentView === 'setup' && <SetupView />}
-            {currentView === 'workout' && <WorkoutView />}
-            {currentView === 'summary' && <SummaryView />}
+            {currentView === 'setup' && renderSetupView()}
+            {currentView === 'workout' && renderWorkoutView()}
+            {currentView === 'summary' && renderSummaryView()}
           </div>
         </div>
       );
