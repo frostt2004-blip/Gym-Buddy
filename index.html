@@ -11,9 +11,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="manifest" href='data:application/manifest+json,{"name":"FitForge","short_name":"FitForge","display":"standalone","background_color":"#1E1410","theme_color":"#1E1410"}'>
+  <link rel="manifest" href='data:application/manifest+json,{"name":"FitForge","short_name":"FitForge","display":"standalone","background_color":"#000000","theme_color":"#000000"}'>
 </head>
-<body class="bg-stone-900 text-stone-100 antialiased overflow-x-hidden">
+<body class="antialiased overflow-x-hidden transition-colors duration-300">
   
   <div id="root"></div>
 
@@ -21,7 +21,6 @@
     const { useState, useEffect } = React;
 
     const EXERCISE_DB = [
-      // LOWER
       { id: 'l1', name: 'Barbell Back Squat', category: 'Lower', equipment: 'Full Gym', defaultSets: 3, defaultReps: 5 },
       { id: 'l2', name: 'Romanian Deadlift (RDL)', category: 'Lower', equipment: 'Full Gym', defaultSets: 3, defaultReps: 8 },
       { id: 'l3', name: 'Dumbbell Lunges', category: 'Lower', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 12 },
@@ -29,13 +28,7 @@
       { id: 'l5', name: 'Goblet Squat', category: 'Lower', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 12 },
       { id: 'l6', name: 'Bulgarian Split Squat', category: 'Lower', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 8 },
       { id: 'l7', name: 'Glute Bridge', category: 'Lower', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 15 },
-      { id: 'l8', name: 'Front Squat', category: 'Lower', equipment: 'Full Gym', defaultSets: 3, defaultReps: 6 },
-      { id: 'l9', name: 'Calf Raises', category: 'Lower', equipment: 'Full Gym', defaultSets: 4, defaultReps: 15 },
-      { id: 'l10', name: 'Hamstring Curls', category: 'Lower', equipment: 'Full Gym', defaultSets: 3, defaultReps: 12 },
-      { id: 'l11', name: 'Box Jumps', category: 'Lower', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 8 },
-      { id: 'l12', name: 'Walking Lunges', category: 'Lower', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 20 },
       
-      // UPPER
       { id: 'u1', name: 'Barbell Bench Press', category: 'Upper', equipment: 'Full Gym', defaultSets: 4, defaultReps: 5 },
       { id: 'u2', name: 'Incline DB Press', category: 'Upper', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 10 },
       { id: 'u3', name: 'Pull-ups', category: 'Upper', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 8 },
@@ -44,43 +37,58 @@
       { id: 'u6', name: 'Barbell Row', category: 'Upper', equipment: 'Full Gym', defaultSets: 3, defaultReps: 8 },
       { id: 'u7', name: 'Push-ups', category: 'Upper', equipment: 'Bodyweight', defaultSets: 4, defaultReps: 15 },
       { id: 'u8', name: 'Dips', category: 'Upper', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 10 },
-      { id: 'u9', name: 'Arnold Press', category: 'Upper', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 10 },
-      { id: 'u10', name: 'Face Pulls', category: 'Upper', equipment: 'Full Gym', defaultSets: 3, defaultReps: 15 },
-      { id: 'u11', name: 'Hammer Curls', category: 'Upper', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 12 },
-      { id: 'u12', name: 'Tricep Extensions', category: 'Upper', equipment: 'Full Gym', defaultSets: 3, defaultReps: 12 },
-      { id: 'u13', name: 'Lateral Raises', category: 'Upper', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 15 },
 
-      // CORE
       { id: 'c1', name: 'Cable Woodchops', category: 'Core', equipment: 'Full Gym', defaultSets: 3, defaultReps: 12 },
       { id: 'c2', name: 'Plank', category: 'Core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 60 },
       { id: 'c3', name: 'Russian Twists', category: 'Core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 20 },
       { id: 'c4', name: 'Hanging Leg Raises', category: 'Core', equipment: 'Full Gym', defaultSets: 3, defaultReps: 10 },
       { id: 'c5', name: 'Ab Wheel Rollout', category: 'Core', equipment: 'Full Gym', defaultSets: 3, defaultReps: 8 },
-      { id: 'c6', name: 'Dead Bugs', category: 'Core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 12 },
-      { id: 'c7', name: 'Bicycle Crunches', category: 'Core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 20 },
-      { id: 'c8', name: 'V-Ups', category: 'Core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 15 },
-      { id: 'c9', name: 'Pallof Press', category: 'Core', equipment: 'Full Gym', defaultSets: 3, defaultReps: 12 },
 
-      // FULL BODY
       { id: 'f1', name: 'Kettlebell Swings', category: 'Full', equipment: 'Dumbbells', defaultSets: 4, defaultReps: 15 },
       { id: 'f2', name: 'Thrusters', category: 'Full', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 10 },
       { id: 'f3', name: 'Burpees', category: 'Full', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 15 },
-      { id: 'f4', name: 'Power Cleans', category: 'Full', equipment: 'Full Gym', defaultSets: 5, defaultReps: 3 },
-      { id: 'f5', name: 'Clean and Jerk', category: 'Full', equipment: 'Full Gym', defaultSets: 5, defaultReps: 3 },
-      { id: 'f6', name: 'Man Makers', category: 'Full', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 8 },
-      { id: 'f7', name: 'Farmer\'s Carry', category: 'Full', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 60 }
+      { id: 'f4', name: 'Power Cleans', category: 'Full', equipment: 'Full Gym', defaultSets: 5, defaultReps: 3 }
     ];
 
     const CATEGORIES = ['Lower', 'Upper', 'Core', 'Full'];
+
+    const THEMES = {
+      health: {
+        bg: 'bg-[#F2F2F7]',
+        card: 'bg-white',
+        text: 'text-black',
+        subtext: 'text-[#8E8E93]',
+        accent: 'bg-[#FF2D55]',
+        accentText: 'text-[#FF2D55]',
+        accentBorder: 'border-[#FF2D55]',
+        border: 'border-[#E5E5EA]',
+        input: 'bg-[#F2F2F7] text-black border-[#E5E5EA] focus:border-[#FF2D55]',
+        doneBtnActive: 'bg-[#FF2D55] text-white',
+        doneBtnInactive: 'bg-[#F2F2F7] text-[#8E8E93]',
+        modalOverlay: 'bg-white/95'
+      },
+      fitness: {
+        bg: 'bg-black',
+        card: 'bg-[#1C1C1E]',
+        text: 'text-white',
+        subtext: 'text-[#8E8E93]',
+        accent: 'bg-[#C4FF00]',
+        accentText: 'text-[#C4FF00]',
+        accentBorder: 'border-[#C4FF00]',
+        border: 'border-[#38383A]',
+        input: 'bg-[#2C2C2E] text-white border-[#38383A] focus:border-[#C4FF00]',
+        doneBtnActive: 'bg-[#C4FF00] text-black',
+        doneBtnInactive: 'bg-[#2C2C2E] text-[#8E8E93]',
+        modalOverlay: 'bg-black/95'
+      }
+    };
 
     function useLocalStorage(key, initialValue) {
       const [storedValue, setStoredValue] = useState(() => {
         try {
           const item = window.localStorage.getItem(key);
           return item ? JSON.parse(item) : initialValue;
-        } catch (error) {
-          return initialValue;
-        }
+        } catch (error) { return initialValue; }
       });
       const setValue = (value) => {
         try {
@@ -94,6 +102,7 @@
 
     function App() {
       const [currentView, setCurrentView] = useState('setup');
+      const [themeMode, setThemeMode] = useLocalStorage('fitforge_theme', 'health');
       const [history, setHistory] = useLocalStorage('fitbod_history', {}); 
       const [timeMode, setTimeMode] = useState(45);
       const [focusArea, setFocusArea] = useState('Full Body');
@@ -103,6 +112,29 @@
       const [restEndTime, setRestEndTime] = useState(null);
       const [restRemainingMs, setRestRemainingMs] = useState(0);
       const [exerciseModal, setExerciseModal] = useState({ isOpen: false, type: null, targetIdx: null });
+      const [liveTimer, setLiveTimer] = useState("00:00");
+      const [swipeState, setSwipeState] = useState({ id: null, startX: 0, currentX: 0 });
+
+      const t = THEMES[themeMode];
+      
+      // Update global body background color to match theme
+      useEffect(() => {
+        document.body.className = `antialiased overflow-x-hidden transition-colors duration-300 ${t.bg}`;
+      }, [themeMode]);
+
+      // Global live workout timer
+      useEffect(() => {
+        let interval;
+        if (currentView === 'workout' && workoutStartTime) {
+          interval = setInterval(() => {
+            const diff = Math.floor((Date.now() - workoutStartTime) / 1000);
+            const mins = String(Math.floor(diff / 60)).padStart(2, '0');
+            const secs = String(diff % 60).padStart(2, '0');
+            setLiveTimer(`${mins}:${secs}`);
+          }, 1000);
+        }
+        return () => clearInterval(interval);
+      }, [currentView, workoutStartTime]);
 
       const generateWorkout = () => {
         let pool = EXERCISE_DB.filter(ex => {
@@ -199,6 +231,30 @@
         setWorkoutPlan(updated);
       };
 
+      const removeSet = (exIdx, setIdx) => {
+        const updated = [...workoutPlan];
+        updated[exIdx].sets.splice(setIdx, 1);
+        setWorkoutPlan(updated);
+      };
+
+      const handleSwipeStart = (e, setId) => setSwipeState({ id: setId, startX: e.touches[0].clientX, currentX: e.touches[0].clientX });
+      const handleSwipeMove = (e, setId) => {
+        if (swipeState.id === setId) {
+          const currentX = e.touches[0].clientX;
+          // Only allow swiping left
+          if (currentX < swipeState.startX) {
+            setSwipeState(prev => ({ ...prev, currentX }));
+          }
+        }
+      };
+      const handleSwipeEnd = (exIdx, setIdx, setId) => {
+        const deltaX = swipeState.currentX - swipeState.startX;
+        if (deltaX < -75) {
+          removeSet(exIdx, setIdx);
+        }
+        setSwipeState({ id: null, startX: 0, currentX: 0 });
+      };
+
       const handleSelectExercise = (newExerciseDef) => {
         const newExercise = generateWorkoutExercise(newExerciseDef);
         const updated = [...workoutPlan];
@@ -231,39 +287,53 @@
       }, [restEndTime]);
 
       const renderSetupView = () => (
-        <div className="flex flex-col h-full overflow-y-auto pb-8 bg-[#1E1410]">
-          <div className="p-6 pt-12 pb-8 bg-[#2D1D16] border-b border-[#593D2C] rounded-b-[40px] mb-6 shadow-xl">
-            <h1 className="text-4xl font-black tracking-tighter text-[#F5EDE6] flex items-center gap-2">Fit<span className="text-[#AF4722]">Forge</span></h1>
-            <p className="text-[#D1B8A3] font-medium mt-1">Configure your session.</p>
+        <div className={`flex flex-col h-full overflow-y-auto pb-8 ${t.bg}`}>
+          <div className={`p-6 pt-12 pb-8 ${t.card} border-b ${t.border} rounded-b-[40px] mb-6 shadow-sm`}>
+            <div className="flex justify-between items-center">
+              <h1 className={`text-4xl font-black tracking-tighter ${t.text} flex items-center gap-2`}>
+                Fit<span className={t.accentText}>Forge</span>
+              </h1>
+              <button 
+                onClick={() => setThemeMode(themeMode === 'health' ? 'fitness' : 'health')}
+                className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border ${t.border} ${t.text}`}
+              >
+                {themeMode === 'health' ? 'Apple Fitness' : 'Apple Health'}
+              </button>
+            </div>
+            <p className={`${t.subtext} font-medium mt-1`}>Configure your session.</p>
           </div>
+          
           <div className="space-y-8 px-6">
             <section>
-              <h2 className="text-sm font-bold text-[#D1B8A3] mb-3">⏱️ Duration</h2>
-              <div className="flex bg-[#2D1D16] rounded-xl p-1 border border-[#593D2C]">
-                {[20, 30, 45, 60].map(t => (
-                  <button key={t} onClick={() => setTimeMode(t)} className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all ${timeMode === t ? 'bg-[#AF4722] text-[#F5EDE6] shadow-md' : 'text-[#D1B8A3] hover:text-[#F5EDE6]'}`}>{t}m</button>
+              <h2 className={`text-sm font-bold ${t.subtext} mb-3`}>⏱️ Duration</h2>
+              <div className={`flex ${t.card} rounded-xl p-1 border ${t.border}`}>
+                {[20, 30, 45, 60].map(time => (
+                  <button key={time} onClick={() => setTimeMode(time)} className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all ${timeMode === time ? `${t.accent} ${themeMode === 'health' ? 'text-white' : 'text-black'} shadow-sm` : `${t.subtext}`}`}>{time}m</button>
                 ))}
               </div>
             </section>
+            
             <section>
-              <h2 className="text-sm font-bold text-[#D1B8A3] mb-3">🎯 Muscle Group Focus</h2>
+              <h2 className={`text-sm font-bold ${t.subtext} mb-3`}>🎯 Muscle Group Focus</h2>
               <div className="grid grid-cols-2 gap-3">
                 {['Full Body', 'Upper Body', 'Lower Body', 'Core Focus'].map(f => (
-                  <button key={f} onClick={() => setFocusArea(f)} className={`p-4 rounded-2xl flex flex-col items-start gap-1 border-2 transition-all ${focusArea === f ? 'border-[#AF4722] bg-[#5E2B16] text-[#F5EDE6]' : 'border-[#593D2C] bg-[#2D1D16] text-[#D1B8A3] hover:border-[#7A543E]'}`}>
+                  <button key={f} onClick={() => setFocusArea(f)} className={`p-4 rounded-2xl flex flex-col items-start gap-1 border-2 transition-all ${focusArea === f ? `${t.accentBorder} ${t.card} ${t.accentText}` : `${t.border} ${t.card} ${t.subtext}`}`}>
                     <div className="font-bold">{f}</div>
                   </button>
                 ))}
               </div>
             </section>
+            
             <section>
-              <h2 className="text-sm font-bold text-[#D1B8A3] mb-3">🏋️ Equipment Profile</h2>
+              <h2 className={`text-sm font-bold ${t.subtext} mb-3`}>🏋️ Equipment Profile</h2>
               <div className="flex flex-col gap-2">
                 {['Full Gym', 'Dumbbells', 'Bodyweight'].map(eq => (
-                  <button key={eq} onClick={() => setEquipment(eq)} className={`px-4 py-4 rounded-xl font-bold text-sm text-left transition-all border ${equipment === eq ? 'bg-[#5E2B16] text-[#F5EDE6] border-[#AF4722]' : 'bg-[#2D1D16] text-[#D1B8A3] border-[#593D2C]'}`}>{eq}</button>
+                  <button key={eq} onClick={() => setEquipment(eq)} className={`px-4 py-4 rounded-xl font-bold text-sm text-left transition-all border ${equipment === eq ? `${t.accentBorder} ${t.card} ${t.accentText}` : `${t.card} ${t.subtext} ${t.border}`}`}>{eq}</button>
                 ))}
               </div>
             </section>
-            <button onClick={generateWorkout} className="w-full bg-[#AF4722] hover:bg-[#C8562B] text-[#F5EDE6] font-black text-lg py-5 rounded-2xl shadow-[0_10px_30px_rgba(175,71,34,0.3)] active:scale-95 transition-all mt-4">START WORKOUT</button>
+            
+            <button onClick={generateWorkout} className={`w-full ${t.accent} ${themeMode === 'health' ? 'text-white' : 'text-black'} font-black text-lg py-5 rounded-2xl active:scale-95 transition-all mt-4 shadow-lg`}>START WORKOUT</button>
           </div>
         </div>
       );
@@ -287,70 +357,103 @@
         });
 
         return (
-          <div className="flex flex-col h-full bg-[#1E1410] relative">
-            <header className="flex justify-between items-center py-4 px-4 bg-[#2D1D16] border-b border-[#593D2C] sticky top-0 z-10 shadow-md">
-              <div><h2 className="text-lg font-black text-[#F5EDE6]">{focusArea}</h2><p className="text-xs text-[#E37036] font-bold">{timeMode} MIN</p></div>
-              <button onClick={() => setCurrentView('summary')} className="text-xs font-bold text-[#D1B8A3] bg-[#3E291F] px-4 py-2 rounded-full active:bg-[#593D2C]">Finish</button>
+          <div className={`flex flex-col h-full ${t.bg} relative`}>
+            <header className={`flex justify-between items-center py-4 px-4 ${t.card} border-b ${t.border} sticky top-0 z-20 shadow-sm`}>
+              <div>
+                <h2 className={`text-lg font-black ${t.text}`}>{focusArea}</h2>
+                <div className="flex items-center gap-2">
+                  <p className={`text-xs ${t.subtext} font-bold`}>{timeMode} MIN</p>
+                  <span className={`text-[10px] ${t.accentText} font-bold px-2 py-0.5 rounded border ${t.accentBorder}`}>{liveTimer}</span>
+                </div>
+              </div>
+              <button onClick={() => setCurrentView('summary')} className={`text-xs font-bold ${t.subtext} bg-transparent border ${t.border} px-4 py-2 rounded-full`}>Finish</button>
             </header>
+            
             <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-40">
               {groupedWorkout.map((group, groupIdx) => (
-                <div key={group.isSuperset ? group.supersetId : `single-${group.items[0].instanceId}`} className={group.isSuperset ? "border-l-4 border-[#AF4722] pl-3 py-1 -ml-3 relative" : ""}>
-                  {group.isSuperset && <div className="text-[10px] font-black text-[#E37036] tracking-widest uppercase mb-2 flex items-center gap-1">🔗 SUPERSET</div>}
+                <div key={group.isSuperset ? group.supersetId : `single-${group.items[0].instanceId}`} className={group.isSuperset ? `border-l-4 ${t.accentBorder} pl-3 py-1 -ml-3 relative` : ""}>
+                  {group.isSuperset && <div className={`text-[10px] font-black ${t.accentText} tracking-widest uppercase mb-2 flex items-center gap-1`}>🔗 SUPERSET</div>}
                   <div className="space-y-4">
                     {group.items.map((ex, idxInGroup) => {
                       const exIdx = ex.originalIdx;
                       return (
                         <div key={ex.instanceId} className="relative">
-                          <div className="bg-[#2D1D16] border border-[#593D2C] rounded-2xl overflow-hidden shadow-lg transition-all">
-                            <div className="p-4 bg-[#3E291F]/50 flex justify-between items-center">
+                          <div className={`${t.card} border ${t.border} rounded-2xl shadow-sm transition-all overflow-hidden`}>
+                            <div className={`p-4 ${themeMode === 'health' ? 'bg-gray-50' : 'bg-[#151516]'} flex justify-between items-center border-b ${t.border}`}>
                               <div className="flex-1 cursor-pointer flex items-center gap-3" onClick={() => toggleSetExpansion(exIdx)}>
-                                <div className={`p-2 rounded-full text-xs font-bold ${ex.isExpanded ? 'bg-[#593D2C] text-[#F5EDE6]' : 'bg-[#1E1410] text-[#D1B8A3]'}`}>{ex.isExpanded ? '▲' : '▼'}</div>
-                                <div><h3 className="font-bold text-[#F5EDE6] leading-tight">{ex.name}</h3><span className="text-[10px] font-bold uppercase text-[#D1B8A3]">{ex.category}</span></div>
+                                <div className={`p-2 rounded-full text-xs font-bold ${ex.isExpanded ? `${t.bg} ${t.text}` : `${t.bg} ${t.subtext}`}`}>{ex.isExpanded ? '▲' : '▼'}</div>
+                                <div><h3 className={`font-bold ${t.text} leading-tight`}>{ex.name}</h3><span className={`text-[10px] font-bold uppercase ${t.subtext}`}>{ex.category}</span></div>
                               </div>
-                              <button onClick={() => setExerciseModal({ isOpen: true, type: 'SWAP', targetIdx: exIdx })} className="ml-2 flex items-center gap-1 text-[10px] font-bold text-[#D1B8A3] bg-[#3E291F] px-3 py-2 rounded-lg">🔄 SWAP</button>
+                              <button onClick={() => setExerciseModal({ isOpen: true, type: 'SWAP', targetIdx: exIdx })} className={`ml-2 flex items-center gap-1 text-[10px] font-bold ${t.subtext} ${t.bg} border ${t.border} px-3 py-2 rounded-lg`}>🔄 SWAP</button>
                             </div>
+                            
                             {ex.isExpanded && (
-                              <div className="p-2 pt-0 pb-4">
-                                <div className="grid grid-cols-12 gap-2 px-3 py-2 text-[10px] font-bold text-[#C4A68D] uppercase tracking-wider">
+                              <div className="p-3 pb-4">
+                                
+                                {/* API VISUALIZER BLOCK */}
+                                <div className={`w-full h-32 rounded-xl mb-4 flex flex-col items-center justify-center ${themeMode === 'health' ? 'bg-gray-100' : 'bg-[#151516]'} overflow-hidden relative border ${t.border}`}>
+                                  {/* Using a placeholder UI API to simulate visualization. Swap this URL with your desired API (like wger or ExerciseDB) later. */}
+                                  <img src={`https://ui-avatars.com/api/?name=${ex.name.replace(/\s+/g, '+')}&background=random&size=200`} alt="Exercise Visualizer" className="object-cover w-full h-full opacity-20 blur-sm" />
+                                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                    <span className="text-2xl mb-1">📹</span>
+                                    <span className={`text-[10px] font-bold tracking-widest uppercase ${t.subtext}`}>API Visual Placeholder</span>
+                                  </div>
+                                </div>
+                                
+                                <div className={`grid grid-cols-12 gap-2 px-3 py-2 text-[10px] font-bold ${t.subtext} uppercase tracking-wider`}>
                                   <div className="col-span-2 text-center">Set</div><div className="col-span-4 text-center">lbs</div><div className="col-span-4 text-center">Reps</div><div className="col-span-2 text-center">✔️</div>
                                 </div>
-                                {ex.sets.map((set, setIdx) => (
-                                  <div key={set.id} className={`grid grid-cols-12 gap-2 px-2 py-2 items-center rounded-lg ${set.completed ? 'bg-[#5E2B16]/40' : ''}`}>
-                                    <div className="col-span-2 text-center font-bold text-[#D1B8A3] text-sm">{setIdx + 1}</div>
-                                    <div className="col-span-4">
-                                      <input 
-                                        type="number" 
-                                        inputMode="decimal"
-                                        pattern="[0-9]*"
-                                        placeholder="-" 
-                                        value={set.weight} 
-                                        onChange={(e) => updateSetData(exIdx, setIdx, 'weight', e.target.value)} 
-                                        disabled={set.completed} 
-                                        className={`w-full bg-[#1E1410] font-bold py-3 px-1 text-center rounded-lg border focus:outline-none ${set.completed ? 'text-[#E37036] border-transparent opacity-50' : 'text-[#F5EDE6] border-[#593D2C] focus:border-[#E37036]'}`} 
-                                      />
+                                
+                                {ex.sets.map((set, setIdx) => {
+                                  const isSwiping = swipeState.id === set.id;
+                                  const swipeDelta = isSwiping ? Math.min(0, swipeState.currentX - swipeState.startX) : 0;
+                                  
+                                  return (
+                                    <div key={set.id} className="relative mb-2 rounded-lg overflow-hidden">
+                                      {/* Swipe-to-delete background */}
+                                      <div className="absolute inset-0 bg-[#FF3B30] flex justify-end items-center px-4 rounded-lg">
+                                        <span className="text-white font-bold text-xs tracking-wider">DELETE</span>
+                                      </div>
+                                      
+                                      {/* The actual row */}
+                                      <div 
+                                        onTouchStart={(e) => handleSwipeStart(e, set.id)}
+                                        onTouchMove={(e) => handleSwipeMove(e, set.id)}
+                                        onTouchEnd={() => handleSwipeEnd(exIdx, setIdx, set.id)}
+                                        style={{ transform: `translateX(${swipeDelta}px)`, transition: isSwiping ? 'none' : 'transform 0.2s ease' }}
+                                        className={`relative z-10 grid grid-cols-12 gap-2 px-2 py-2 items-center rounded-lg ${t.card} ${set.completed ? 'opacity-60' : ''}`}
+                                      >
+                                        <div className={`col-span-2 text-center font-bold ${t.subtext} text-sm`}>{setIdx + 1}</div>
+                                        <div className="col-span-4">
+                                          <input 
+                                            type="number" inputMode="decimal" pattern="[0-9]*" placeholder="-" 
+                                            value={set.weight} onChange={(e) => updateSetData(exIdx, setIdx, 'weight', e.target.value)} disabled={set.completed} 
+                                            className={`w-full font-bold py-3 px-1 text-center rounded-lg border focus:outline-none transition-colors ${set.completed ? 'bg-transparent border-transparent' : t.input}`} 
+                                          />
+                                        </div>
+                                        <div className="col-span-4">
+                                          <input 
+                                            type="number" inputMode="decimal" pattern="[0-9]*" placeholder="-" 
+                                            value={set.reps} onChange={(e) => updateSetData(exIdx, setIdx, 'reps', e.target.value)} disabled={set.completed} 
+                                            className={`w-full font-bold py-3 px-1 text-center rounded-lg border focus:outline-none transition-colors ${set.completed ? 'bg-transparent border-transparent' : t.input}`} 
+                                          />
+                                        </div>
+                                        <div className="col-span-2 flex justify-center">
+                                          <button onClick={() => toggleSetComplete(exIdx, setIdx)} className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold transition-colors ${set.completed ? t.doneBtnActive : t.doneBtnInactive}`}>
+                                            {set.completed && '✓'}
+                                          </button>
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div className="col-span-4">
-                                      <input 
-                                        type="number" 
-                                        inputMode="decimal"
-                                        pattern="[0-9]*"
-                                        placeholder="-" 
-                                        value={set.reps} 
-                                        onChange={(e) => updateSetData(exIdx, setIdx, 'reps', e.target.value)} 
-                                        disabled={set.completed} 
-                                        className={`w-full bg-[#1E1410] font-bold py-3 px-1 text-center rounded-lg border focus:outline-none ${set.completed ? 'text-[#E37036] border-transparent opacity-50' : 'text-[#F5EDE6] border-[#593D2C] focus:border-[#E37036]'}`} 
-                                      />
-                                    </div>
-                                    <div className="col-span-2 flex justify-center"><button onClick={() => toggleSetComplete(exIdx, setIdx)} className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold ${set.completed ? 'bg-[#AF4722] text-[#F5EDE6]' : 'bg-[#3E291F] text-[#D1B8A3]'}`}>{set.completed && '✓'}</button></div>
-                                  </div>
-                                ))}
-                                <div className="px-2 mt-2"><button onClick={() => addSet(exIdx)} className="w-full py-3 text-xs font-bold text-[#D1B8A3] bg-[#1E1410] rounded-lg border border-dashed border-[#593D2C]">+ ADD SET</button></div>
+                                  );
+                                })}
+                                <div className="px-2 mt-4"><button onClick={() => addSet(exIdx)} className={`w-full py-3 text-xs font-bold ${t.subtext} ${t.bg} rounded-lg border border-dashed ${t.border}`}>+ ADD SET</button></div>
                               </div>
                             )}
                           </div>
                           {exIdx < workoutPlan.length - 1 && (
-                            <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 z-20 pb-2">
-                              <button onClick={() => toggleSuperset(exIdx)} className={`p-1.5 rounded-full border shadow-sm ${isLinkedToNext(exIdx) ? 'bg-[#AF4722] text-[#F5EDE6] border-[#C8562B]' : 'bg-[#2D1D16] text-[#D1B8A3] border-[#593D2C]'}`}>🔗</button>
+                            <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 z-10 pb-2">
+                              <button onClick={() => toggleSuperset(exIdx)} className={`p-1.5 rounded-full border shadow-sm ${isLinkedToNext(exIdx) ? `${t.accent} ${t.accentBorder}` : `${t.bg} ${t.border}`}`}>🔗</button>
                             </div>
                           )}
                         </div>
@@ -359,36 +462,36 @@
                   </div>
                 </div>
               ))}
-              <div className="mt-8 pt-4"><button onClick={() => setExerciseModal({ isOpen: true, type: 'ADD', targetIdx: null })} className="w-full py-4 border-2 border-dashed border-[#593D2C] rounded-2xl text-[#D1B8A3] font-bold flex justify-center items-center gap-2">➕ ADD EXERCISE</button></div>
-              {isWorkoutComplete && <button onClick={() => setCurrentView('summary')} className="w-full mt-8 py-5 bg-[#AF4722] text-[#F5EDE6] font-black rounded-2xl">FINISH WORKOUT</button>}
+              <div className="mt-8 pt-4"><button onClick={() => setExerciseModal({ isOpen: true, type: 'ADD', targetIdx: null })} className={`w-full py-4 border-2 border-dashed ${t.border} rounded-2xl ${t.subtext} font-bold flex justify-center items-center gap-2`}>➕ ADD EXERCISE</button></div>
+              {isWorkoutComplete && <button onClick={() => setCurrentView('summary')} className={`w-full mt-8 py-5 ${t.accent} ${themeMode === 'health' ? 'text-white' : 'text-black'} font-black rounded-2xl`}>FINISH WORKOUT</button>}
             </div>
 
             {restRemainingMs > 0 && (
-              <div className="fixed bottom-6 left-4 right-4 bg-[#2D1D16] border border-[#593D2C] p-4 rounded-2xl shadow-2xl flex items-center justify-between z-40 backdrop-blur-md">
+              <div className={`fixed bottom-6 left-4 right-4 ${t.card} border ${t.border} p-4 rounded-2xl shadow-2xl flex items-center justify-between z-40 backdrop-blur-md`}>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#5E2B16]/50 text-[#E37036] rounded-full flex items-center justify-center animate-pulse">⏱️</div>
-                  <div><div className="text-xs font-bold text-[#D1B8A3] uppercase">Rest Timer</div><div className="text-2xl font-black text-[#F5EDE6] leading-none">{Math.floor(restRemainingMs / 1000)}s</div></div>
+                  <div className={`w-10 h-10 ${t.accent} bg-opacity-20 ${t.accentText} rounded-full flex items-center justify-center animate-pulse`}>⏱️</div>
+                  <div><div className={`text-xs font-bold ${t.subtext} uppercase`}>Rest Timer</div><div className={`text-2xl font-black ${t.text} leading-none`}>{Math.floor(restRemainingMs / 1000)}s</div></div>
                 </div>
-                <button onClick={stopRestTimer} className="px-6 py-3 bg-[#3E291F] text-[#F5EDE6] font-bold text-sm rounded-xl">Skip</button>
-                <div className="absolute bottom-0 left-0 h-1 bg-[#AF4722] rounded-b-2xl transition-all" style={{ width: `${(restRemainingMs / 90000) * 100}%` }} />
+                <button onClick={stopRestTimer} className={`px-6 py-3 ${t.bg} ${t.text} font-bold text-sm rounded-xl border ${t.border}`}>Skip</button>
+                <div className={`absolute bottom-0 left-0 h-1 ${t.accent} rounded-b-2xl transition-all`} style={{ width: `${(restRemainingMs / 90000) * 100}%` }} />
               </div>
             )}
 
             {exerciseModal.isOpen && (
-              <div className="absolute inset-0 z-50 bg-[#1E1410]/95 backdrop-blur-md flex flex-col">
-                <header className="flex justify-between items-center py-4 px-4 border-b border-[#593D2C] bg-[#2D1D16]">
-                  <div><h2 className="text-lg font-black text-[#F5EDE6]">{exerciseModal.type === 'SWAP' ? 'Swap Exercise' : 'Add Exercise'}</h2></div>
-                  <button onClick={() => setExerciseModal({ isOpen: false, type: null, targetIdx: null })} className="p-2 bg-[#1E1410] text-[#D1B8A3] rounded-full font-bold">X</button>
+              <div className={`absolute inset-0 z-50 ${t.modalOverlay} backdrop-blur-md flex flex-col`}>
+                <header className={`flex justify-between items-center py-4 px-4 border-b ${t.border} ${t.card}`}>
+                  <div><h2 className={`text-lg font-black ${t.text}`}>{exerciseModal.type === 'SWAP' ? 'Swap Exercise' : 'Add Exercise'}</h2></div>
+                  <button onClick={() => setExerciseModal({ isOpen: false, type: null, targetIdx: null })} className={`p-2 ${t.bg} ${t.text} rounded-full font-bold`}>X</button>
                 </header>
                 <div className="flex-1 overflow-y-auto p-4 space-y-6">
                   {CATEGORIES.map(category => (
                     <div key={category}>
-                      <h3 className="text-[#E37036] font-bold text-sm mb-3 tracking-widest uppercase border-b border-[#593D2C] pb-1">{category} Body</h3>
+                      <h3 className={`${t.accentText} font-bold text-sm mb-3 tracking-widest uppercase border-b ${t.border} pb-1`}>{category} Body</h3>
                       <div className="space-y-2">
                         {EXERCISE_DB.filter(ex => ex.category === category).map(alt => (
-                          <button key={alt.id} onClick={() => handleSelectExercise(alt)} className="w-full text-left bg-[#2D1D16] border border-[#593D2C] p-4 rounded-xl flex justify-between items-center">
-                            <div><div className="font-bold text-[#F5EDE6]">{alt.name}</div><div className="text-xs text-[#D1B8A3] mt-1">{alt.equipment}</div></div>
-                            <div className="text-[#AF4722] font-bold">{exerciseModal.type === 'SWAP' ? '🔄' : '➕'}</div>
+                          <button key={alt.id} onClick={() => handleSelectExercise(alt)} className={`w-full text-left ${t.card} border ${t.border} p-4 rounded-xl flex justify-between items-center`}>
+                            <div><div className={`font-bold ${t.text}`}>{alt.name}</div><div className={`text-xs ${t.subtext} mt-1`}>{alt.equipment}</div></div>
+                            <div className={`${t.accentText} font-bold`}>{exerciseModal.type === 'SWAP' ? '🔄' : '➕'}</div>
                           </button>
                         ))}
                       </div>
@@ -404,21 +507,21 @@
       const renderSummaryView = () => {
         const elapsedMinutes = workoutStartTime ? Math.round((Date.now() - workoutStartTime) / 60000) : 0;
         return (
-          <div className="flex flex-col h-full bg-[#1E1410] p-6 justify-center items-center text-center">
-            <div className="w-24 h-24 bg-[#5E2B16]/30 text-[#E37036] rounded-full flex justify-center items-center mb-8 border-4 border-[#AF4722]/20 text-4xl">🔥</div>
-            <h2 className="text-4xl font-black text-[#F5EDE6] mb-2">Workout<br/>Complete</h2>
-            <div className="bg-[#2D1D16] border border-[#593D2C] rounded-2xl p-6 w-full max-w-xs mt-6 mb-10 shadow-lg">
-              <div className="text-[#D1B8A3] text-xs font-bold uppercase tracking-widest mb-1">Time Elapsed</div>
-              <div className="text-3xl font-black text-[#F5EDE6]">{elapsedMinutes} <span className="text-lg text-[#C4A68D]">MIN</span></div>
+          <div className={`flex flex-col h-full ${t.bg} p-6 justify-center items-center text-center`}>
+            <div className={`w-24 h-24 ${t.accent} bg-opacity-20 ${t.accentText} rounded-full flex justify-center items-center mb-8 border-4 ${t.accentBorder} text-4xl`}>🔥</div>
+            <h2 className={`text-4xl font-black ${t.text} mb-2`}>Workout<br/>Complete</h2>
+            <div className={`${t.card} border ${t.border} rounded-2xl p-6 w-full max-w-xs mt-6 mb-10 shadow-sm`}>
+              <div className={`text-xs font-bold uppercase tracking-widest mb-1 ${t.subtext}`}>Time Elapsed</div>
+              <div className={`text-3xl font-black ${t.text}`}>{elapsedMinutes} <span className={`text-lg ${t.subtext}`}>MIN</span></div>
             </div>
-            <button onClick={() => setCurrentView('setup')} className="w-full py-5 bg-[#2D1D16] text-[#F5EDE6] font-black text-lg rounded-2xl flex justify-center items-center gap-3 border border-[#593D2C]">🏠 RETURN HOME</button>
+            <button onClick={() => setCurrentView('setup')} className={`w-full py-5 ${t.card} ${t.text} font-black text-lg rounded-2xl flex justify-center items-center gap-3 border ${t.border}`}>🏠 RETURN HOME</button>
           </div>
         );
       };
 
       return (
-        <div className="w-full min-h-screen bg-[#1A110D] text-[#F5EDE6] font-sans flex justify-center">
-          <div className="w-full max-w-md h-screen relative shadow-2xl overflow-hidden flex flex-col bg-[#1E1410]">
+        <div className={`w-full min-h-screen ${t.bg} ${t.text} font-sans flex justify-center`}>
+          <div className={`w-full max-w-md h-screen relative shadow-2xl overflow-hidden flex flex-col ${t.bg}`}>
             {currentView === 'setup' && renderSetupView()}
             {currentView === 'workout' && renderWorkoutView()}
             {currentView === 'summary' && renderSummaryView()}
