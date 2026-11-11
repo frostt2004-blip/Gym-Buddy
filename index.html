@@ -10,7 +10,7 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="apple-touch-icon" href="watermarked_img_1897991486403567339.jpg">
   <link rel="manifest" href='data:application/manifest+json,{"name":"FitForge","short_name":"FitForge","display":"standalone","background_color":"#000000","theme_color":"#000000"}'>
 </head>
 <body class="antialiased overflow-x-hidden transition-colors duration-300">
@@ -18,67 +18,38 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useMemo } = React;
 
-    const EXERCISE_DB = [
+    // Fallback database for offline use in the gym
+    const LOCAL_EXERCISE_DB = [
       { id: 'l1', name: 'Barbell Back Squat', category: 'Lower', equipment: 'Full Gym', defaultSets: 3, defaultReps: 5 },
       { id: 'l2', name: 'Romanian Deadlift (RDL)', category: 'Lower', equipment: 'Full Gym', defaultSets: 3, defaultReps: 8 },
       { id: 'l3', name: 'Dumbbell Lunges', category: 'Lower', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 12 },
-      { id: 'l4', name: 'Leg Press', category: 'Lower', equipment: 'Full Gym', defaultSets: 3, defaultReps: 10 },
-      { id: 'l5', name: 'Goblet Squat', category: 'Lower', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 12 },
-      { id: 'l6', name: 'Bulgarian Split Squat', category: 'Lower', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 8 },
-      { id: 'l7', name: 'Glute Bridge', category: 'Lower', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 15 },
-      
       { id: 'u1', name: 'Barbell Bench Press', category: 'Upper', equipment: 'Full Gym', defaultSets: 4, defaultReps: 5 },
       { id: 'u2', name: 'Incline DB Press', category: 'Upper', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 10 },
       { id: 'u3', name: 'Pull-ups', category: 'Upper', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 8 },
-      { id: 'u4', name: 'Lat Pulldown', category: 'Upper', equipment: 'Full Gym', defaultSets: 3, defaultReps: 10 },
-      { id: 'u5', name: 'Overhead DB Press', category: 'Upper', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 8 },
-      { id: 'u6', name: 'Barbell Row', category: 'Upper', equipment: 'Full Gym', defaultSets: 3, defaultReps: 8 },
-      { id: 'u7', name: 'Push-ups', category: 'Upper', equipment: 'Bodyweight', defaultSets: 4, defaultReps: 15 },
-      { id: 'u8', name: 'Dips', category: 'Upper', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 10 },
-
       { id: 'c1', name: 'Cable Woodchops', category: 'Core', equipment: 'Full Gym', defaultSets: 3, defaultReps: 12 },
       { id: 'c2', name: 'Plank', category: 'Core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 60 },
-      { id: 'c3', name: 'Russian Twists', category: 'Core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 20 },
-      { id: 'c4', name: 'Hanging Leg Raises', category: 'Core', equipment: 'Full Gym', defaultSets: 3, defaultReps: 10 },
-      { id: 'c5', name: 'Ab Wheel Rollout', category: 'Core', equipment: 'Full Gym', defaultSets: 3, defaultReps: 8 },
-
       { id: 'f1', name: 'Kettlebell Swings', category: 'Full', equipment: 'Dumbbells', defaultSets: 4, defaultReps: 15 },
-      { id: 'f2', name: 'Thrusters', category: 'Full', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 10 },
-      { id: 'f3', name: 'Burpees', category: 'Full', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 15 },
-      { id: 'f4', name: 'Power Cleans', category: 'Full', equipment: 'Full Gym', defaultSets: 5, defaultReps: 3 }
+      { id: 'f3', name: 'Burpees', category: 'Full', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 15 }
     ];
 
-    const CATEGORIES = ['Lower', 'Upper', 'Core', 'Full'];
+    const MUSCLE_FILTERS = ['All', 'Upper', 'Lower', 'Core', 'Full'];
+    const EQUIPMENT_FILTERS = ['All', 'Bodyweight', 'Dumbbells', 'Full Gym'];
 
     const THEMES = {
       health: {
-        bg: 'bg-[#F2F2F7]',
-        card: 'bg-white',
-        text: 'text-black',
-        subtext: 'text-[#8E8E93]',
-        accent: 'bg-[#FF2D55]',
-        accentText: 'text-[#FF2D55]',
-        accentBorder: 'border-[#FF2D55]',
-        border: 'border-[#E5E5EA]',
-        input: 'bg-[#F2F2F7] text-black border-[#E5E5EA] focus:border-[#FF2D55]',
-        doneBtnActive: 'bg-[#FF2D55] text-white',
-        doneBtnInactive: 'bg-[#F2F2F7] text-[#8E8E93]',
+        bg: 'bg-[#F2F2F7]', card: 'bg-white', text: 'text-black', subtext: 'text-[#8E8E93]',
+        accent: 'bg-[#FF2D55]', accentText: 'text-[#FF2D55]', accentBorder: 'border-[#FF2D55]',
+        border: 'border-[#E5E5EA]', input: 'bg-[#F2F2F7] text-black border-[#E5E5EA] focus:border-[#FF2D55]',
+        doneBtnActive: 'bg-[#FF2D55] text-white', doneBtnInactive: 'bg-[#F2F2F7] text-[#8E8E93]',
         modalOverlay: 'bg-white/95'
       },
       fitness: {
-        bg: 'bg-black',
-        card: 'bg-[#1C1C1E]',
-        text: 'text-white',
-        subtext: 'text-[#8E8E93]',
-        accent: 'bg-[#C4FF00]',
-        accentText: 'text-[#C4FF00]',
-        accentBorder: 'border-[#C4FF00]',
-        border: 'border-[#38383A]',
-        input: 'bg-[#2C2C2E] text-white border-[#38383A] focus:border-[#C4FF00]',
-        doneBtnActive: 'bg-[#C4FF00] text-black',
-        doneBtnInactive: 'bg-[#2C2C2E] text-[#8E8E93]',
+        bg: 'bg-black', card: 'bg-[#1C1C1E]', text: 'text-white', subtext: 'text-[#8E8E93]',
+        accent: 'bg-[#C4FF00]', accentText: 'text-[#C4FF00]', accentBorder: 'border-[#C4FF00]',
+        border: 'border-[#38383A]', input: 'bg-[#2C2C2E] text-white border-[#38383A] focus:border-[#C4FF00]',
+        doneBtnActive: 'bg-[#C4FF00] text-black', doneBtnInactive: 'bg-[#2C2C2E] text-[#8E8E93]',
         modalOverlay: 'bg-black/95'
       }
     };
@@ -104,6 +75,9 @@
       const [currentView, setCurrentView] = useState('setup');
       const [themeMode, setThemeMode] = useLocalStorage('fitforge_theme', 'health');
       const [history, setHistory] = useLocalStorage('fitbod_history', {}); 
+      const [exerciseDB, setExerciseDB] = useState(LOCAL_EXERCISE_DB);
+      const [dbLoaded, setDbLoaded] = useState(false);
+      
       const [timeMode, setTimeMode] = useState(45);
       const [focusArea, setFocusArea] = useState('Full Body');
       const [equipment, setEquipment] = useState('Full Gym'); 
@@ -111,18 +85,57 @@
       const [workoutStartTime, setWorkoutStartTime] = useState(null);
       const [restEndTime, setRestEndTime] = useState(null);
       const [restRemainingMs, setRestRemainingMs] = useState(0);
-      const [exerciseModal, setExerciseModal] = useState({ isOpen: false, type: null, targetIdx: null });
       const [liveTimer, setLiveTimer] = useState("00:00");
       const [swipeState, setSwipeState] = useState({ id: null, startX: 0, currentX: 0 });
 
+      // Modal & Search State
+      const [exerciseModal, setExerciseModal] = useState({ isOpen: false, type: null, targetIdx: null });
+      const [searchQuery, setSearchQuery] = useState('');
+      const [filterMuscle, setFilterMuscle] = useState('All');
+      const [filterEquipment, setFilterEquipment] = useState('All');
+
       const t = THEMES[themeMode];
       
-      // Update global body background color to match theme
       useEffect(() => {
         document.body.className = `antialiased overflow-x-hidden transition-colors duration-300 ${t.bg}`;
       }, [themeMode]);
 
-      // Global live workout timer
+      // Fetch external ExerciseDB V1
+      useEffect(() => {
+        fetch('https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json')
+          .then(res => res.json())
+          .then(data => {
+            const mappedDB = data.map((ex, i) => {
+               let cat = 'Full';
+               if (ex.primaryMuscles && ex.primaryMuscles.length > 0) {
+                  const m = ex.primaryMuscles[0].toLowerCase();
+                  if (['chest', 'shoulders', 'triceps', 'biceps', 'lats', 'middle back', 'lower back', 'traps'].includes(m)) cat = 'Upper';
+                  else if (['abdominals'].includes(m)) cat = 'Core';
+                  else if (['quadriceps', 'hamstrings', 'calves', 'glutes'].includes(m)) cat = 'Lower';
+               }
+               
+               let eq = 'Full Gym';
+               if (ex.equipment === 'body only') eq = 'Bodyweight';
+               else if (ex.equipment === 'dumbbell') eq = 'Dumbbells';
+
+               return {
+                 id: ex.id || `edb-${i}`,
+                 name: ex.name.charAt(0).toUpperCase() + ex.name.slice(1),
+                 category: cat,
+                 equipment: eq,
+                 defaultSets: 3,
+                 defaultReps: 10
+               };
+            });
+            setExerciseDB(mappedDB);
+            setDbLoaded(true);
+          })
+          .catch(err => {
+            console.log("Offline mode: Using local fallback database.");
+            setDbLoaded(true);
+          });
+      }, []);
+
       useEffect(() => {
         let interval;
         if (currentView === 'workout' && workoutStartTime) {
@@ -137,7 +150,7 @@
       }, [currentView, workoutStartTime]);
 
       const generateWorkout = () => {
-        let pool = EXERCISE_DB.filter(ex => {
+        let pool = exerciseDB.filter(ex => {
           if (equipment === 'Bodyweight' && ex.equipment !== 'Bodyweight') return false;
           if (equipment === 'Dumbbells' && ex.equipment === 'Full Gym') return false;
           if (focusArea === 'Upper Body' && ex.category !== 'Upper') return false;
@@ -148,8 +161,8 @@
 
         pool.sort(() => Math.random() - 0.5);
         const maxExercises = Math.max(2, Math.floor(timeMode / 8));
-        
         let selected = [];
+        
         if (focusArea === 'Full Body') {
           const upper = pool.find(e => e.category === 'Upper');
           const lower = pool.find(e => e.category === 'Lower');
@@ -241,17 +254,12 @@
       const handleSwipeMove = (e, setId) => {
         if (swipeState.id === setId) {
           const currentX = e.touches[0].clientX;
-          // Only allow swiping left
-          if (currentX < swipeState.startX) {
-            setSwipeState(prev => ({ ...prev, currentX }));
-          }
+          if (currentX < swipeState.startX) setSwipeState(prev => ({ ...prev, currentX }));
         }
       };
       const handleSwipeEnd = (exIdx, setIdx, setId) => {
         const deltaX = swipeState.currentX - swipeState.startX;
-        if (deltaX < -75) {
-          removeSet(exIdx, setIdx);
-        }
+        if (deltaX < -75) removeSet(exIdx, setIdx);
         setSwipeState({ id: null, startX: 0, currentX: 0 });
       };
 
@@ -266,6 +274,7 @@
         }
         setWorkoutPlan(updated);
         setExerciseModal({ isOpen: false, type: null, targetIdx: null });
+        setSearchQuery('');
       };
 
       const startRestTimer = (seconds) => { setRestEndTime(Date.now() + seconds * 1000); setRestRemainingMs(seconds * 1000); };
@@ -285,6 +294,15 @@
         }
         return () => clearInterval(interval);
       }, [restEndTime]);
+
+      const filteredModalDB = useMemo(() => {
+        return exerciseDB.filter(ex => {
+          const matchSearch = ex.name.toLowerCase().includes(searchQuery.toLowerCase());
+          const matchMuscle = filterMuscle === 'All' || ex.category === filterMuscle;
+          const matchEq = filterEquipment === 'All' || ex.equipment === filterEquipment;
+          return matchSearch && matchMuscle && matchEq;
+        });
+      }, [exerciseDB, searchQuery, filterMuscle, filterEquipment]);
 
       const renderSetupView = () => (
         <div className={`flex flex-col h-full overflow-y-auto pb-8 ${t.bg}`}>
@@ -333,7 +351,13 @@
               </div>
             </section>
             
-            <button onClick={generateWorkout} className={`w-full ${t.accent} ${themeMode === 'health' ? 'text-white' : 'text-black'} font-black text-lg py-5 rounded-2xl active:scale-95 transition-all mt-4 shadow-lg`}>START WORKOUT</button>
+            <button 
+              onClick={generateWorkout} 
+              disabled={!dbLoaded}
+              className={`w-full ${!dbLoaded ? 'opacity-50' : ''} ${t.accent} ${themeMode === 'health' ? 'text-white' : 'text-black'} font-black text-lg py-5 rounded-2xl active:scale-95 transition-all mt-4 shadow-lg`}
+            >
+              {dbLoaded ? 'START WORKOUT' : 'LOADING DB...'}
+            </button>
           </div>
         </div>
       );
@@ -389,10 +413,7 @@
                             
                             {ex.isExpanded && (
                               <div className="p-3 pb-4">
-                                
-                                {/* API VISUALIZER BLOCK */}
                                 <div className={`w-full h-32 rounded-xl mb-4 flex flex-col items-center justify-center ${themeMode === 'health' ? 'bg-gray-100' : 'bg-[#151516]'} overflow-hidden relative border ${t.border}`}>
-                                  {/* Using a placeholder UI API to simulate visualization. Swap this URL with your desired API (like wger or ExerciseDB) later. */}
                                   <img src={`https://ui-avatars.com/api/?name=${ex.name.replace(/\s+/g, '+')}&background=random&size=200`} alt="Exercise Visualizer" className="object-cover w-full h-full opacity-20 blur-sm" />
                                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                                     <span className="text-2xl mb-1">📹</span>
@@ -410,12 +431,10 @@
                                   
                                   return (
                                     <div key={set.id} className="relative mb-2 rounded-lg overflow-hidden">
-                                      {/* Swipe-to-delete background */}
                                       <div className="absolute inset-0 bg-[#FF3B30] flex justify-end items-center px-4 rounded-lg">
                                         <span className="text-white font-bold text-xs tracking-wider">DELETE</span>
                                       </div>
                                       
-                                      {/* The actual row */}
                                       <div 
                                         onTouchStart={(e) => handleSwipeStart(e, set.id)}
                                         onTouchMove={(e) => handleSwipeMove(e, set.id)}
@@ -479,23 +498,56 @@
 
             {exerciseModal.isOpen && (
               <div className={`absolute inset-0 z-50 ${t.modalOverlay} backdrop-blur-md flex flex-col`}>
-                <header className={`flex justify-between items-center py-4 px-4 border-b ${t.border} ${t.card}`}>
-                  <div><h2 className={`text-lg font-black ${t.text}`}>{exerciseModal.type === 'SWAP' ? 'Swap Exercise' : 'Add Exercise'}</h2></div>
+                
+                <header className={`flex justify-between items-center p-4 border-b ${t.border} ${t.card}`}>
+                  <h2 className={`text-lg font-black ${t.text}`}>{exerciseModal.type === 'SWAP' ? 'Swap Exercise' : 'Add Exercise'}</h2>
                   <button onClick={() => setExerciseModal({ isOpen: false, type: null, targetIdx: null })} className={`p-2 ${t.bg} ${t.text} rounded-full font-bold`}>X</button>
                 </header>
-                <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                  {CATEGORIES.map(category => (
-                    <div key={category}>
-                      <h3 className={`${t.accentText} font-bold text-sm mb-3 tracking-widest uppercase border-b ${t.border} pb-1`}>{category} Body</h3>
-                      <div className="space-y-2">
-                        {EXERCISE_DB.filter(ex => ex.category === category).map(alt => (
-                          <button key={alt.id} onClick={() => handleSelectExercise(alt)} className={`w-full text-left ${t.card} border ${t.border} p-4 rounded-xl flex justify-between items-center`}>
-                            <div><div className={`font-bold ${t.text}`}>{alt.name}</div><div className={`text-xs ${t.subtext} mt-1`}>{alt.equipment}</div></div>
-                            <div className={`${t.accentText} font-bold`}>{exerciseModal.type === 'SWAP' ? '🔄' : '➕'}</div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                
+                {/* Search & Filter Header */}
+                <div className={`p-4 border-b ${t.border} ${t.card}`}>
+                  <input 
+                    type="text" 
+                    placeholder="Search exercises..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className={`w-full font-bold py-3 px-4 rounded-xl border focus:outline-none transition-colors ${t.input} mb-4`} 
+                  />
+                  
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                    {MUSCLE_FILTERS.map(m => (
+                      <button 
+                        key={m} 
+                        onClick={() => setFilterMuscle(m)}
+                        className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border transition-colors ${filterMuscle === m ? `${t.accent} ${themeMode === 'health' ? 'text-white' : 'text-black'} ${t.accentBorder}` : `${t.bg} ${t.subtext} ${t.border}`}`}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto mt-2 scrollbar-hide">
+                    {EQUIPMENT_FILTERS.map(eq => (
+                      <button 
+                        key={eq} 
+                        onClick={() => setFilterEquipment(eq)}
+                        className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border transition-colors ${filterEquipment === eq ? `${t.accent} ${themeMode === 'health' ? 'text-white' : 'text-black'} ${t.accentBorder}` : `${t.bg} ${t.subtext} ${t.border}`}`}
+                      >
+                        {eq}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Filtered Results List */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                  <div className={`text-xs ${t.subtext} font-bold uppercase tracking-wider mb-4`}>
+                    {filteredModalDB.length} Exercises Found
+                  </div>
+                  {filteredModalDB.map(alt => (
+                    <button key={alt.id} onClick={() => handleSelectExercise(alt)} className={`w-full text-left ${t.card} border ${t.border} p-4 rounded-xl flex justify-between items-center`}>
+                      <div><div className={`font-bold ${t.text}`}>{alt.name}</div><div className={`text-xs ${t.subtext} mt-1`}>{alt.category} • {alt.equipment}</div></div>
+                      <div className={`${t.accentText} font-bold`}>{exerciseModal.type === 'SWAP' ? '🔄' : '➕'}</div>
+                    </button>
                   ))}
                 </div>
               </div>
