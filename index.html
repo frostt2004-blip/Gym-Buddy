@@ -20,21 +20,19 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
 
-    const LOCAL_EXERCISE_DB = [
-      { id: 'l1', name: 'Barbell Back Squat', category: 'Lower', equipment: 'Full Gym', defaultSets: 3, defaultReps: 5, image: null },
-      { id: 'l2', name: 'Romanian Deadlift (RDL)', category: 'Lower', equipment: 'Full Gym', defaultSets: 3, defaultReps: 8, image: null },
-      { id: 'l3', name: 'Dumbbell Lunges', category: 'Lower', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 12, image: null },
-      { id: 'u1', name: 'Barbell Bench Press', category: 'Upper', equipment: 'Full Gym', defaultSets: 4, defaultReps: 5, image: null },
-      { id: 'u2', name: 'Incline DB Press', category: 'Upper', equipment: 'Dumbbells', defaultSets: 3, defaultReps: 10, image: null },
-      { id: 'u3', name: 'Pull-ups', category: 'Upper', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 8, image: null },
-      { id: 'c1', name: 'Cable Woodchops', category: 'Core', equipment: 'Full Gym', defaultSets: 3, defaultReps: 12, image: null },
-      { id: 'c2', name: 'Plank', category: 'Core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 60, image: null },
-      { id: 'f1', name: 'Kettlebell Swings', category: 'Full', equipment: 'Dumbbells', defaultSets: 4, defaultReps: 15, image: null },
-      { id: 'f3', name: 'Burpees', category: 'Full', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 15, image: null }
+    const RAPID_API_KEY = "b8808e7c2amsh9d51d85af1ae98dp1085f0jsn56311acea15a";
+
+    const FALLBACK_EXERCISE_DB = [
+      { id: 'l1', name: 'Barbell Back Squat', category: 'Lower', equipment: 'Full Gym', defaultSets: 3, defaultReps: 5, gifUrl: null },
+      { id: 'l2', name: 'Romanian Deadlift (RDL)', category: 'Lower', equipment: 'Full Gym', defaultSets: 3, defaultReps: 8, gifUrl: null },
+      { id: 'u1', name: 'Barbell Bench Press', category: 'Upper', equipment: 'Full Gym', defaultSets: 4, defaultReps: 5, gifUrl: null },
+      { id: 'u3', name: 'Pull-ups', category: 'Upper', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 8, gifUrl: null },
+      { id: 'c1', name: 'Plank', category: 'Core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 60, gifUrl: null },
+      { id: 'f1', name: 'Kettlebell Swings', category: 'Full', equipment: 'Dumbbells', defaultSets: 4, defaultReps: 15, gifUrl: null }
     ];
 
     const MUSCLE_FILTERS = ['All', 'Upper', 'Lower', 'Core', 'Full'];
-    const EQUIPMENT_FILTERS = ['All', 'Bodyweight', 'Dumbbells', 'Full Gym'];
+    const EQUIPMENT_FILTERS = ['All', 'body weight', 'dumbbell', 'barbell', 'cable'];
 
     const THEMES = {
       health: {
@@ -74,7 +72,7 @@
       const [currentView, setCurrentView] = useState('setup');
       const [themeMode, setThemeMode] = useLocalStorage('fitforge_theme', 'health');
       const [history, setHistory] = useLocalStorage('fitbod_history', {}); 
-      const [exerciseDB, setExerciseDB] = useState(LOCAL_EXERCISE_DB);
+      const [exerciseDB, setExerciseDB] = useState(FALLBACK_EXERCISE_DB);
       const [dbLoaded, setDbLoaded] = useState(false);
       
       const [timeMode, setTimeMode] = useState(45);
@@ -98,44 +96,46 @@
         document.body.className = `antialiased overflow-x-hidden transition-colors duration-300 ${t.bg}`;
       }, [themeMode]);
 
+      // Fetch official ExerciseDB from RapidAPI with your Key
       useEffect(() => {
-        fetch('https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json')
+        fetch('https://exercisedb.p.rapidapi.com/exercises?limit=300', {
+          method: 'GET',
+          headers: {
+            'X-RapidAPI-Key': RAPID_API_KEY,
+            'X-RapidAPI-Host': 'exercisedb.p.rapidapi.com'
+          }
+        })
           .then(res => res.json())
           .then(data => {
-            const mappedDB = data.map((ex, i) => {
-               let cat = 'Full';
-               if (ex.primaryMuscles && ex.primaryMuscles.length > 0) {
-                  const m = ex.primaryMuscles[0].toLowerCase();
-                  if (['chest', 'shoulders', 'triceps', 'biceps', 'lats', 'middle back', 'lower back', 'traps'].includes(m)) cat = 'Upper';
-                  else if (['abdominals'].includes(m)) cat = 'Core';
-                  else if (['quadriceps', 'hamstrings', 'calves', 'glutes'].includes(m)) cat = 'Lower';
-               }
-               
-               let eq = 'Full Gym';
-               if (ex.equipment === 'body only') eq = 'Bodyweight';
-               else if (ex.equipment === 'dumbbell') eq = 'Dumbbells';
+            if (Array.isArray(data)) {
+              const mappedDB = data.map((ex, i) => {
+                let cat = 'Full';
+                const bodyPart = (ex.bodyPart || '').toLowerCase();
+                if (['chest', 'back', 'shoulders', 'upper arms', 'neck'].includes(bodyPart)) cat = 'Upper';
+                else if (['waist'].includes(bodyPart)) cat = 'Core';
+                else if (['upper legs', 'lower legs'].includes(bodyPart)) cat = 'Lower';
 
-               // Dynamically construct the image URL if an image array exists
-               let imageUrl = null;
-               if (ex.images && ex.images.length > 0) {
-                 imageUrl = `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/${ex.images[0]}`;
-               }
+                let eq = 'Full Gym';
+                if (ex.equipment === 'body weight') eq = 'Bodyweight';
+                else if (ex.equipment === 'dumbbell') eq = 'Dumbbells';
 
-               return {
-                 id: ex.id || `edb-${i}`,
-                 name: ex.name.charAt(0).toUpperCase() + ex.name.slice(1),
-                 category: cat,
-                 equipment: eq,
-                 defaultSets: 3,
-                 defaultReps: 10,
-                 image: imageUrl
-               };
-            });
-            setExerciseDB(mappedDB);
+                return {
+                  id: ex.id || `api-${i}`,
+                  name: ex.name.charAt(0).toUpperCase() + ex.name.slice(1),
+                  category: cat,
+                  equipment: eq,
+                  rawEquipment: ex.equipment,
+                  defaultSets: 3,
+                  defaultReps: 10,
+                  gifUrl: ex.gifUrl || null
+                };
+              });
+              setExerciseDB(mappedDB);
+            }
             setDbLoaded(true);
           })
           .catch(err => {
-            console.log("Offline mode: Using local fallback database.");
+            console.log("API connection failed, falling back to offline database.");
             setDbLoaded(true);
           });
       }, []);
@@ -303,7 +303,7 @@
         return exerciseDB.filter(ex => {
           const matchSearch = ex.name.toLowerCase().includes(searchQuery.toLowerCase());
           const matchMuscle = filterMuscle === 'All' || ex.category === filterMuscle;
-          const matchEq = filterEquipment === 'All' || ex.equipment === filterEquipment;
+          const matchEq = filterEquipment === 'All' || (ex.rawEquipment && ex.rawEquipment === filterEquipment);
           return matchSearch && matchMuscle && matchEq;
         });
       }, [exerciseDB, searchQuery, filterMuscle, filterEquipment]);
@@ -418,10 +418,10 @@
                             {ex.isExpanded && (
                               <div className="p-3 pb-4">
                                 
-                                {/* UPDATED IMAGE VISUALIZER */}
-                                <div className={`w-full h-32 rounded-xl mb-4 flex flex-col items-center justify-center ${themeMode === 'health' ? 'bg-gray-100' : 'bg-[#151516]'} overflow-hidden relative border ${t.border}`}>
-                                  {ex.image ? (
-                                    <img src={ex.image} alt={ex.name} className="object-cover w-full h-full opacity-70" />
+                                {/* REAL ANIMATED GIF VISUALIZER */}
+                                <div className={`w-full h-44 rounded-xl mb-4 flex flex-col items-center justify-center ${themeMode === 'health' ? 'bg-gray-100' : 'bg-[#151516]'} overflow-hidden relative border ${t.border}`}>
+                                  {ex.gifUrl ? (
+                                    <img src={ex.gifUrl} alt={ex.name} className="object-contain w-full h-full" />
                                   ) : (
                                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                                       <span className="text-2xl mb-1">📹</span>
@@ -553,14 +553,14 @@
                   {filteredModalDB.map(alt => (
                     <button key={alt.id} onClick={() => handleSelectExercise(alt)} className={`w-full text-left ${t.card} border ${t.border} p-4 rounded-xl flex justify-between items-center`}>
                       <div className="flex items-center gap-3">
-                        {alt.image ? (
-                           <div className={`w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex-shrink-0 border ${t.border}`}>
-                              <img src={alt.image} className="w-full h-full object-cover" alt="" />
+                        {alt.gifUrl ? (
+                           <div className={`w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex-shrink-0 border ${t.border}`}>
+                              <img src={alt.gifUrl} className="w-full h-full object-cover" alt="" />
                            </div>
                         ) : (
-                           <div className={`w-10 h-10 rounded-md flex-shrink-0 flex items-center justify-center ${t.bg} border ${t.border} text-[10px]`}>📹</div>
+                           <div className={`w-12 h-12 rounded-md flex-shrink-0 flex items-center justify-center ${t.bg} border ${t.border} text-[10px]`}>📹</div>
                         )}
-                        <div><div className={`font-bold ${t.text}`}>{alt.name}</div><div className={`text-xs ${t.subtext} mt-1`}>{alt.category} • {alt.equipment}</div></div>
+                        <div><div className={`font-bold ${t.text}`}>{alt.name}</div><div className={`text-xs ${t.subtext} mt-1`}>{alt.category} • {alt.rawEquipment || alt.equipment}</div></div>
                       </div>
                       <div className={`${t.accentText} font-bold`}>{exerciseModal.type === 'SWAP' ? '🔄' : '➕'}</div>
                     </button>
