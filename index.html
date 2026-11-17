@@ -9,11 +9,12 @@
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Confetti Library for Workout Celebrations -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   
   <link rel="apple-touch-icon" href="Untitled%20design.png">
   <link rel="manifest" href='data:application/manifest+json,{"name":"FitForge","short_name":"FitForge","display":"standalone","background_color":"#000000","theme_color":"#000000"}'>
 
-  <!-- Flipbook Animation for Motion Effect -->
   <style>
     @keyframes flipbook {
       0%, 49.9% { opacity: 1; }
@@ -21,6 +22,13 @@
     }
     .animate-flip {
       animation: flipbook 1.5s infinite;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop {
+      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
   </style>
 </head>
@@ -32,12 +40,12 @@
     const { useState, useEffect, useMemo } = React;
 
     const FALLBACK_EXERCISE_DB = [
-      { id: 'l1', name: 'Barbell Back Squat', category: 'Lower', equipment: 'Full Gym', defaultSets: 3, defaultReps: 5, imageStart: null, imageEnd: null },
-      { id: 'l2', name: 'Romanian Deadlift (RDL)', category: 'Lower', equipment: 'Full Gym', defaultSets: 3, defaultReps: 8, imageStart: null, imageEnd: null },
-      { id: 'u1', name: 'Barbell Bench Press', category: 'Upper', equipment: 'Full Gym', defaultSets: 4, defaultReps: 5, imageStart: null, imageEnd: null },
-      { id: 'u3', name: 'Pull-ups', category: 'Upper', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 8, imageStart: null, imageEnd: null },
-      { id: 'c1', name: 'Plank', category: 'Core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 60, imageStart: null, imageEnd: null },
-      { id: 'f1', name: 'Kettlebell Swings', category: 'Full', equipment: 'Dumbbells', defaultSets: 4, defaultReps: 15, imageStart: null, imageEnd: null }
+      { id: 'l1', name: 'Bodyweight Squats', category: 'Lower', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 12, imageStart: null, imageEnd: null },
+      { id: 'l2', name: 'Reverse Lunges', category: 'Lower', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 10, imageStart: null, imageEnd: null },
+      { id: 'u1', name: 'Push-ups', category: 'Upper', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 10, imageStart: null, imageEnd: null },
+      { id: 'u3', name: 'Pull-ups', category: 'Upper', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 6, imageStart: null, imageEnd: null },
+      { id: 'c1', name: 'Plank', category: 'Core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 45, imageStart: null, imageEnd: null },
+      { id: 'f1', name: 'Jumping Jacks', category: 'Full', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 30, imageStart: null, imageEnd: null }
     ];
 
     const MUSCLE_FILTERS = ['All', 'Upper', 'Lower', 'Core', 'Full'];
@@ -77,16 +85,44 @@
       return [storedValue, setValue];
     }
 
+    // Helper to pick 3 unique random numbers between 1 and 20
+    function generateSecretWinningSlots() {
+      const slots = new Set();
+      while (slots.size < 3) {
+        slots.add(Math.floor(Math.random() * 20) + 1);
+      }
+      return Array.from(slots).sort((a, b) => a - b);
+    }
+
     function App() {
       const [currentView, setCurrentView] = useState('setup');
-      const [themeMode, setThemeMode] = useLocalStorage('fitforge_theme', 'health');
-      const [history, setHistory] = useLocalStorage('fitbod_history', {}); 
+      const [themeMode, setThemeMode] = useLocalStorage('fitforge_theme', 'fitness');
+      
+      // Kid Profile & Parent Phone Settings
+      const [profile, setProfile] = useLocalStorage('fitforge_profile', { kidName: '', parentPhone: '' });
+      const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+      // Weight/Rep memory per exercise
+      const [exerciseHistory, setExerciseHistory] = useLocalStorage('fitbod_history', {}); 
+      
+      // Full Workout Log History
+      const [workoutLogs, setWorkoutLogs] = useLocalStorage('fitforge_workout_logs', []);
+
+      // 20-Workout Mystery Reward Cycle State
+      const [rewardCycle, setRewardCycle] = useLocalStorage('fitforge_reward_cycle', {
+        currentCount: 0,
+        winningSlots: generateSecretWinningSlots(),
+        rewardsWonThisCycle: 0
+      });
+      const [lastSummaryResult, setLastSummaryResult] = useState(null);
+
       const [exerciseDB, setExerciseDB] = useState(FALLBACK_EXERCISE_DB);
       const [dbLoaded, setDbLoaded] = useState(false);
       
-      const [timeMode, setTimeMode] = useState(45);
+      // Default to 20 minutes for daily kid workouts
+      const [timeMode, setTimeMode] = useState(20);
       const [focusArea, setFocusArea] = useState('Full Body');
-      const [equipment, setEquipment] = useState('Full Gym'); 
+      const [equipment, setEquipment] = useState('Bodyweight'); 
       const [workoutPlan, setWorkoutPlan] = useState([]);
       const [workoutStartTime, setWorkoutStartTime] = useState(null);
       const [restEndTime, setRestEndTime] = useState(null);
@@ -105,6 +141,14 @@
         document.body.className = `antialiased overflow-x-hidden transition-colors duration-300 ${t.bg}`;
       }, [themeMode]);
 
+      // Prompt settings on first launch if name/phone aren't set
+      useEffect(() => {
+        if (!profile.kidName || !profile.parentPhone) {
+          setShowSettingsModal(true);
+        }
+      }, []);
+
+      // Fetch ExerciseDB
       useEffect(() => {
         fetch('https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json')
           .then(res => res.json())
@@ -147,10 +191,7 @@
             }
             setDbLoaded(true);
           })
-          .catch(err => {
-            console.log("Using offline fallback database.");
-            setDbLoaded(true);
-          });
+          .catch(() => setDbLoaded(true));
       }, []);
 
       useEffect(() => {
@@ -177,7 +218,7 @@
         });
 
         pool.sort(() => Math.random() - 0.5);
-        const maxExercises = Math.max(2, Math.floor(timeMode / 8));
+        const maxExercises = Math.max(3, Math.floor(timeMode / 6));
         let selected = [];
         
         if (focusArea === 'Full Body') {
@@ -201,7 +242,7 @@
       };
 
       const generateWorkoutExercise = (exerciseDef) => {
-        const pastData = history[exerciseDef.id] || { weight: '', reps: exerciseDef.defaultReps };
+        const pastData = exerciseHistory[exerciseDef.id] || { weight: '', reps: exerciseDef.defaultReps };
         const sets = Array.from({ length: exerciseDef.defaultSets }).map((_, i) => ({
           id: `${exerciseDef.id}-${Date.now()}-s${i}`, weight: pastData.weight, reps: pastData.reps, completed: false
         }));
@@ -246,11 +287,11 @@
             const ssGroup = updated.filter(e => e.supersetId === currentEx.supersetId);
             if (currentEx.instanceId !== ssGroup[ssGroup.length - 1].instanceId) shouldStartTimer = false;
           }
-          if (shouldStartTimer) startRestTimer(90);
+          if (shouldStartTimer) startRestTimer(60);
           
           const completedSet = currentEx.sets[setIdx];
           if (completedSet.weight || completedSet.reps) {
-            setHistory(prev => ({ ...prev, [currentEx.id]: { weight: completedSet.weight, reps: completedSet.reps } }));
+            setExerciseHistory(prev => ({ ...prev, [currentEx.id]: { weight: completedSet.weight, reps: completedSet.reps } }));
           }
         }
       };
@@ -312,6 +353,95 @@
         return () => clearInterval(interval);
       }, [restEndTime]);
 
+      // Trigger Confetti Celebration
+      const triggerCelebration = (isJackpot) => {
+        if (typeof window.confetti === 'function') {
+          if (isJackpot) {
+            // Massive multi-burst jackpot celebration
+            const duration = 2500;
+            const end = Date.now() + duration;
+            (function frame() {
+              window.confetti({ particleCount: 7, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#FFD700', '#00FF00', '#FF2D55'] });
+              window.confetti({ particleCount: 7, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#FFD700', '#00FF00', '#FF2D55'] });
+              if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+          } else {
+            // Standard workout completion confetti burst
+            window.confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          }
+        }
+      };
+
+      // Complete Workout, Log History, Evaluate Mystery Reward
+      const handleFinishWorkout = () => {
+        stopRestTimer();
+        const elapsedMinutes = workoutStartTime ? Math.max(1, Math.round((Date.now() - workoutStartTime) / 60000)) : timeMode;
+        
+        // Advance punch card (1 to 20)
+        const nextWorkoutNumber = rewardCycle.currentCount + 1;
+        const wonReward = rewardCycle.winningSlots.includes(nextWorkoutNumber);
+        const updatedRewardsWon = wonReward ? rewardCycle.rewardsWonThisCycle + 1 : rewardCycle.rewardsWonThisCycle;
+
+        // Build detailed log entry
+        const completedExercisesSummary = workoutPlan.map(ex => {
+          const doneSets = ex.sets.filter(s => s.completed);
+          return {
+            name: ex.name,
+            setsCompleted: doneSets.length > 0 ? doneSets.length : ex.sets.length
+          };
+        });
+
+        const newLogEntry = {
+          id: `log-${Date.now()}`,
+          date: new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+          time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+          focusArea,
+          duration: elapsedMinutes,
+          workoutNumberInCycle: nextWorkoutNumber,
+          wonReward,
+          exercises: completedExercisesSummary
+        };
+
+        setWorkoutLogs(prev => [newLogEntry, ...prev]);
+
+        // Check if 20-workout cycle is complete and needs reset for next time
+        if (nextWorkoutNumber >= 20) {
+          setRewardCycle({
+            currentCount: 0,
+            winningSlots: generateSecretWinningSlots(),
+            rewardsWonThisCycle: 0
+          });
+        } else {
+          setRewardCycle({
+            currentCount: nextWorkoutNumber,
+            winningSlots: rewardCycle.winningSlots,
+            rewardsWonThisCycle: updatedRewardsWon
+          });
+        }
+
+        setLastSummaryResult({
+          elapsedMinutes,
+          workoutNumber: nextWorkoutNumber,
+          wonReward,
+          rewardsWonThisCycle: updatedRewardsWon,
+          cycleCompleted: nextWorkoutNumber >= 20,
+          dateStamp: `${newLogEntry.date} at ${newLogEntry.time}`
+        });
+
+        setCurrentView('summary');
+        setTimeout(() => triggerCelebration(wonReward), 150);
+      };
+
+      // Build iOS SMS deep link
+      const getSmsLink = () => {
+        const phone = (profile.parentPhone || '').replace(/[^0-9+]/g, '');
+        const kid = profile.kidName || 'I';
+        const num = lastSummaryResult ? lastSummaryResult.workoutNumber : '';
+        const stamp = lastSummaryResult ? lastSummaryResult.dateStamp : '';
+        const body = `🎉 FitForge Reward Alert! ${kid} just completed Workout #${num}/20 (${stamp}) and unlocked a mystery $5 reward! 💸💪`;
+        return `sms:${phone}&body=${encodeURIComponent(body)}`;
+      };
+
       const filteredModalDB = useMemo(() => {
         return exerciseDB.filter(ex => {
           const matchSearch = ex.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -323,47 +453,98 @@
 
       const renderSetupView = () => (
         <div className={`flex flex-col h-full overflow-y-auto pb-8 ${t.bg}`}>
-          <div className={`p-6 pt-12 pb-8 ${t.card} border-b ${t.border} rounded-b-[40px] mb-6 shadow-sm`}>
-            <div className="flex justify-between items-center">
-              <h1 className={`text-4xl font-black tracking-tighter ${t.text} flex items-center gap-2`}>
-                Fit<span className={t.accentText}>Forge</span>
-              </h1>
-              <button 
-                onClick={() => setThemeMode(themeMode === 'health' ? 'fitness' : 'health')}
-                className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border ${t.border} ${t.text}`}
-              >
-                {themeMode === 'health' ? 'Apple Fitness' : 'Apple Health'}
-              </button>
+          <div className={`p-6 pt-10 pb-6 ${t.card} border-b ${t.border} rounded-b-[32px] mb-5 shadow-sm`}>
+            <div className="flex justify-between items-center mb-3">
+              <div>
+                <h1 className={`text-3xl font-black tracking-tighter ${t.text} flex items-center gap-2`}>
+                  Fit<span className={t.accentText}>Forge</span>
+                </h1>
+                <p className={`${t.subtext} text-xs font-bold mt-0.5`}>
+                  {profile.kidName ? `Welcome back, ${profile.kidName}!` : 'Daily Workout & Rewards'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setCurrentView('history')}
+                  className={`text-xs font-bold px-3 py-2 rounded-full border ${t.border} ${t.text} flex items-center gap-1`}
+                >
+                  📅 History ({workoutLogs.length})
+                </button>
+                <button 
+                  onClick={() => setShowSettingsModal(true)}
+                  className={`p-2 rounded-full border ${t.border} ${t.text} text-xs`}
+                  title="Settings"
+                >
+                  ⚙️
+                </button>
+              </div>
             </div>
-            <p className={`${t.subtext} font-medium mt-1`}>Configure your session.</p>
+
+            {/* 20-Workout Mystery Punch Card */}
+            <div className={`mt-4 p-4 rounded-2xl border ${t.border} ${t.bg}`}>
+              <div className="flex justify-between items-center mb-2">
+                <span className={`text-xs font-black uppercase tracking-wider ${t.text}`}>
+                  🎯 20-Workout Challenge
+                </span>
+                <span className={`text-xs font-black ${t.accentText}`}>
+                  {rewardCycle.currentCount} / 20 Done
+                </span>
+              </div>
+              
+              {/* 20-dot visual grid */}
+              <div className="grid grid-cols-10 gap-1.5 my-2.5">
+                {Array.from({ length: 20 }).map((_, idx) => {
+                  const slotNum = idx + 1;
+                  const isDone = slotNum <= rewardCycle.currentCount;
+                  return (
+                    <div 
+                      key={slotNum}
+                      className={`h-6 rounded-md flex items-center justify-center text-[10px] font-black transition-all ${
+                        isDone 
+                          ? `${t.accent} ${themeMode === 'health' ? 'text-white' : 'text-black'}` 
+                          : `${t.card} ${t.subtext} border ${t.border}`
+                      }`}
+                    >
+                      {isDone ? '✓' : slotNum}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex justify-between items-center text-[11px] font-bold mt-2">
+                <span className={t.subtext}>3 hidden $5 rewards per 20 workouts</span>
+                <span className="text-emerald-500 font-black">
+                  💰 {rewardCycle.rewardsWonThisCycle}/3 Found
+                </span>
+              </div>
+            </div>
           </div>
           
-          <div className="space-y-8 px-6">
+          <div className="space-y-6 px-6">
             <section>
-              <h2 className={`text-sm font-bold ${t.subtext} mb-3`}>⏱️ Duration</h2>
+              <h2 className={`text-xs font-bold uppercase tracking-wider ${t.subtext} mb-2.5`}>⏱️ Daily Goal Duration</h2>
               <div className={`flex ${t.card} rounded-xl p-1 border ${t.border}`}>
-                {[20, 30, 45, 60].map(time => (
-                  <button key={time} onClick={() => setTimeMode(time)} className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all ${timeMode === time ? `${t.accent} ${themeMode === 'health' ? 'text-white' : 'text-black'} shadow-sm` : `${t.subtext}`}`}>{time}m</button>
+                {[20, 30, 45].map(time => (
+                  <button key={time} onClick={() => setTimeMode(time)} className={`flex-1 py-2.5 rounded-lg font-bold text-sm transition-all ${timeMode === time ? `${t.accent} ${themeMode === 'health' ? 'text-white' : 'text-black'} shadow-sm` : `${t.subtext}`}`}>{time}m</button>
                 ))}
               </div>
             </section>
             
             <section>
-              <h2 className={`text-sm font-bold ${t.subtext} mb-3`}>🎯 Muscle Group Focus</h2>
-              <div className="grid grid-cols-2 gap-3">
+              <h2 className={`text-xs font-bold uppercase tracking-wider ${t.subtext} mb-2.5`}>🎯 Focus Area</h2>
+              <div className="grid grid-cols-2 gap-2.5">
                 {['Full Body', 'Upper Body', 'Lower Body', 'Core Focus'].map(f => (
-                  <button key={f} onClick={() => setFocusArea(f)} className={`p-4 rounded-2xl flex flex-col items-start gap-1 border-2 transition-all ${focusArea === f ? `${t.accentBorder} ${t.card} ${t.accentText}` : `${t.border} ${t.card} ${t.subtext}`}`}>
-                    <div className="font-bold">{f}</div>
+                  <button key={f} onClick={() => setFocusArea(f)} className={`p-3.5 rounded-2xl flex flex-col items-start gap-1 border-2 transition-all ${focusArea === f ? `${t.accentBorder} ${t.card} ${t.accentText}` : `${t.border} ${t.card} ${t.subtext}`}`}>
+                    <div className="font-bold text-sm">{f}</div>
                   </button>
                 ))}
               </div>
             </section>
             
             <section>
-              <h2 className={`text-sm font-bold ${t.subtext} mb-3`}>🏋️ Equipment Profile</h2>
-              <div className="flex flex-col gap-2">
-                {['Full Gym', 'Dumbbells', 'Bodyweight'].map(eq => (
-                  <button key={eq} onClick={() => setEquipment(eq)} className={`px-4 py-4 rounded-xl font-bold text-sm text-left transition-all border ${equipment === eq ? `${t.accentBorder} ${t.card} ${t.accentText}` : `${t.card} ${t.subtext} ${t.border}`}`}>{eq}</button>
+              <h2 className={`text-xs font-bold uppercase tracking-wider ${t.subtext} mb-2.5`}>🏋️ Equipment</h2>
+              <div className="flex gap-2">
+                {['Bodyweight', 'Dumbbells', 'Full Gym'].map(eq => (
+                  <button key={eq} onClick={() => setEquipment(eq)} className={`flex-1 py-3 rounded-xl font-bold text-xs text-center transition-all border ${equipment === eq ? `${t.accentBorder} ${t.card} ${t.accentText}` : `${t.card} ${t.subtext} ${t.border}`}`}>{eq}</button>
                 ))}
               </div>
             </section>
@@ -371,10 +552,119 @@
             <button 
               onClick={generateWorkout} 
               disabled={!dbLoaded}
-              className={`w-full ${!dbLoaded ? 'opacity-50' : ''} ${t.accent} ${themeMode === 'health' ? 'text-white' : 'text-black'} font-black text-lg py-5 rounded-2xl active:scale-95 transition-all mt-4 shadow-lg`}
+              className={`w-full ${!dbLoaded ? 'opacity-50' : ''} ${t.accent} ${themeMode === 'health' ? 'text-white' : 'text-black'} font-black text-lg py-4 rounded-2xl active:scale-95 transition-all mt-2 shadow-lg`}
             >
-              {dbLoaded ? 'START WORKOUT' : 'LOADING DB...'}
+              {dbLoaded ? `START ${timeMode}-MIN WORKOUT` : 'LOADING DB...'}
             </button>
+          </div>
+
+          {/* Profile & Parent Setup Modal */}
+          {showSettingsModal && (
+            <div className={`absolute inset-0 z-50 ${t.modalOverlay} backdrop-blur-md flex flex-col justify-center p-6`}>
+              <div className={`${t.card} border ${t.border} rounded-3xl p-6 shadow-2xl space-y-5`}>
+                <div className="flex justify-between items-center">
+                  <h2 className={`text-xl font-black ${t.text}`}>Player & Reward Setup</h2>
+                  {profile.kidName && (
+                    <button onClick={() => setShowSettingsModal(false)} className={`p-2 ${t.bg} ${t.text} rounded-full font-bold text-xs`}>✕</button>
+                  )}
+                </div>
+                <p className={`text-xs ${t.subtext}`}>
+                  Set up your name and your parent's cell number so you can text them when you unlock a mystery $5 reward!
+                </p>
+
+                <div>
+                  <label className={`block text-xs font-bold uppercase ${t.subtext} mb-1.5`}>Your First Name</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. Presley or Lincoln"
+                    value={profile.kidName}
+                    onChange={(e) => setProfile({ ...profile, kidName: e.target.value })}
+                    className={`w-full font-bold py-3 px-4 rounded-xl border focus:outline-none ${t.input}`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-xs font-bold uppercase ${t.subtext} mb-1.5`}>Parent's Phone Number</label>
+                  <input 
+                    type="tel" 
+                    placeholder="e.g. 617-555-0199"
+                    value={profile.parentPhone}
+                    onChange={(e) => setProfile({ ...profile, parentPhone: e.target.value })}
+                    className={`w-full font-bold py-3 px-4 rounded-xl border focus:outline-none ${t.input}`}
+                  />
+                </div>
+
+                <div className="flex justify-between items-center pt-2">
+                  <span className={`text-xs font-bold ${t.subtext}`}>App Theme</span>
+                  <button 
+                    onClick={() => setThemeMode(themeMode === 'health' ? 'fitness' : 'health')}
+                    className={`text-xs font-bold px-3 py-1.5 rounded-full border ${t.border} ${t.text}`}
+                  >
+                    {themeMode === 'health' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+                  </button>
+                </div>
+
+                <button 
+                  onClick={() => setShowSettingsModal(false)}
+                  className={`w-full py-4 ${t.accent} ${themeMode === 'health' ? 'text-white' : 'text-black'} font-black rounded-xl text-sm`}
+                >
+                  SAVE SETTINGS
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+
+      const renderHistoryView = () => (
+        <div className={`flex flex-col h-full ${t.bg}`}>
+          <header className={`flex justify-between items-center py-4 px-5 ${t.card} border-b ${t.border} sticky top-0 z-20`}>
+            <div>
+              <h2 className={`text-xl font-black ${t.text}`}>Workout Log</h2>
+              <p className={`text-xs ${t.subtext} font-bold`}>{workoutLogs.length} Total Workouts Completed</p>
+            </div>
+            <button onClick={() => setCurrentView('setup')} className={`text-xs font-bold ${t.text} ${t.bg} border ${t.border} px-4 py-2 rounded-full`}>
+              Done
+            </button>
+          </header>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {workoutLogs.length === 0 ? (
+              <div className="text-center py-20 px-6">
+                <div className="text-4xl mb-3">📋</div>
+                <div className={`font-black text-lg ${t.text}`}>No Workouts Logged Yet</div>
+                <p className={`text-xs ${t.subtext} mt-1`}>Complete your first 20-minute session to start tracking your progress and unlocking mystery $5 rewards!</p>
+              </div>
+            ) : (
+              workoutLogs.map((log) => (
+                <div key={log.id} className={`${t.card} border ${log.wonReward ? 'border-emerald-500' : t.border} rounded-2xl p-4 shadow-sm`}>
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className={`font-black text-sm ${t.text}`}>{log.focusArea}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${t.bg} ${t.subtext}`}>
+                          #{log.workoutNumberInCycle}/20
+                        </span>
+                      </div>
+                      <div className={`text-xs ${t.subtext} mt-0.5`}>{log.date} • {log.time} • {log.duration} min</div>
+                    </div>
+                    {log.wonReward && (
+                      <span className="bg-emerald-500/20 text-emerald-500 border border-emerald-500/40 text-[10px] font-black px-2.5 py-1 rounded-full">
+                        💸 $5 WINNER
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className={`mt-3 pt-2.5 border-t ${t.border} flex flex-wrap gap-1.5`}>
+                    {log.exercises.map((ex, i) => (
+                      <span key={i} className={`text-[11px] font-medium px-2.5 py-1 rounded-lg ${t.bg} ${t.text}`}>
+                        {ex.name} ({ex.setsCompleted}x)
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       );
@@ -403,19 +693,21 @@
               <div>
                 <h2 className={`text-lg font-black ${t.text}`}>{focusArea}</h2>
                 <div className="flex items-center gap-2">
-                  <p className={`text-xs ${t.subtext} font-bold`}>{timeMode} MIN</p>
-                  <span className={`text-[10px] ${t.accentText} font-bold px-2 py-0.5 rounded border ${t.accentBorder}`}>{liveTimer}</span>
+                  <p className={`text-xs ${t.subtext} font-bold`}>GOAL: {timeMode}M</p>
+                  <span className={`text-xs ${t.accentText} font-black px-2 py-0.5 rounded border ${t.accentBorder}`}>{liveTimer}</span>
                 </div>
               </div>
-              <button onClick={() => setCurrentView('summary')} className={`text-xs font-bold ${t.subtext} bg-transparent border ${t.border} px-4 py-2 rounded-full`}>Finish</button>
+              <button onClick={handleFinishWorkout} className={`text-xs font-black ${themeMode === 'health' ? 'text-white' : 'text-black'} ${t.accent} px-4 py-2 rounded-full shadow-sm`}>
+                Finish
+              </button>
             </header>
             
             <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-40">
-              {groupedWorkout.map((group, groupIdx) => (
+              {groupedWorkout.map((group) => (
                 <div key={group.isSuperset ? group.supersetId : `single-${group.items[0].instanceId}`} className={group.isSuperset ? `border-l-4 ${t.accentBorder} pl-3 py-1 -ml-3 relative` : ""}>
                   {group.isSuperset && <div className={`text-[10px] font-black ${t.accentText} tracking-widest uppercase mb-2 flex items-center gap-1`}>🔗 SUPERSET</div>}
                   <div className="space-y-4">
-                    {group.items.map((ex, idxInGroup) => {
+                    {group.items.map((ex) => {
                       const exIdx = ex.originalIdx;
                       return (
                         <div key={ex.instanceId} className="relative">
@@ -430,7 +722,6 @@
                             
                             {ex.isExpanded && (
                               <div className="p-3 pb-4">
-                                
                                 <div className={`w-full h-36 rounded-xl mb-4 flex flex-col items-center justify-center ${themeMode === 'health' ? 'bg-gray-100' : 'bg-[#151516]'} overflow-hidden relative border ${t.border}`}>
                                   {ex.imageStart && ex.imageEnd ? (
                                     <div className="relative w-full h-full">
@@ -441,8 +732,8 @@
                                     <img src={ex.imageStart} alt={ex.name} className="object-cover w-full h-full opacity-70" />
                                   ) : (
                                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                      <span className="text-2xl mb-1">📹</span>
-                                      <span className={`text-[10px] font-bold tracking-widest uppercase ${t.subtext}`}>No Visual Available</span>
+                                      <span className="text-2xl mb-1">💪</span>
+                                      <span className={`text-[10px] font-bold tracking-widest uppercase ${t.subtext}`}>{ex.equipment}</span>
                                     </div>
                                   )}
                                 </div>
@@ -471,7 +762,7 @@
                                         <div className={`col-span-2 text-center font-bold ${t.subtext} text-sm`}>{setIdx + 1}</div>
                                         <div className="col-span-4">
                                           <input 
-                                            type="number" inputMode="decimal" pattern="[0-9]*" placeholder="-" 
+                                            type="number" inputMode="decimal" pattern="[0-9]*" placeholder="BW" 
                                             value={set.weight} onChange={(e) => updateSetData(exIdx, setIdx, 'weight', e.target.value)} disabled={set.completed} 
                                             className={`w-full font-bold py-3 px-1 text-center rounded-lg border focus:outline-none transition-colors ${set.completed ? 'bg-transparent border-transparent' : t.input}`} 
                                           />
@@ -508,7 +799,13 @@
                 </div>
               ))}
               <div className="mt-8 pt-4"><button onClick={() => setExerciseModal({ isOpen: true, type: 'ADD', targetIdx: null })} className={`w-full py-4 border-2 border-dashed ${t.border} rounded-2xl ${t.subtext} font-bold flex justify-center items-center gap-2`}>➕ ADD EXERCISE</button></div>
-              {isWorkoutComplete && <button onClick={() => setCurrentView('summary')} className={`w-full mt-8 py-5 ${t.accent} ${themeMode === 'health' ? 'text-white' : 'text-black'} font-black rounded-2xl`}>FINISH WORKOUT</button>}
+              
+              <button 
+                onClick={handleFinishWorkout} 
+                className={`w-full mt-6 py-5 ${t.accent} ${themeMode === 'health' ? 'text-white' : 'text-black'} font-black text-lg rounded-2xl shadow-lg active:scale-95 transition-all`}
+              >
+                {isWorkoutComplete ? '🎉 COMPLETE & LOG WORKOUT' : 'COMPLETE & LOG WORKOUT'}
+              </button>
             </div>
 
             {restRemainingMs > 0 && (
@@ -518,13 +815,12 @@
                   <div><div className={`text-xs font-bold ${t.subtext} uppercase`}>Rest Timer</div><div className={`text-2xl font-black ${t.text} leading-none`}>{Math.floor(restRemainingMs / 1000)}s</div></div>
                 </div>
                 <button onClick={stopRestTimer} className={`px-6 py-3 ${t.bg} ${t.text} font-bold text-sm rounded-xl border ${t.border}`}>Skip</button>
-                <div className={`absolute bottom-0 left-0 h-1 ${t.accent} rounded-b-2xl transition-all`} style={{ width: `${(restRemainingMs / 90000) * 100}%` }} />
+                <div className={`absolute bottom-0 left-0 h-1 ${t.accent} rounded-b-2xl transition-all`} style={{ width: `${(restRemainingMs / 60000) * 100}%` }} />
               </div>
             )}
 
             {exerciseModal.isOpen && (
               <div className={`absolute inset-0 z-50 ${t.modalOverlay} backdrop-blur-md flex flex-col`}>
-                
                 <header className={`flex justify-between items-center p-4 border-b ${t.border} ${t.card}`}>
                   <h2 className={`text-lg font-black ${t.text}`}>{exerciseModal.type === 'SWAP' ? 'Swap Exercise' : 'Add Exercise'}</h2>
                   <button onClick={() => setExerciseModal({ isOpen: false, type: null, targetIdx: null })} className={`p-2 ${t.bg} ${t.text} rounded-full font-bold`}>X</button>
@@ -575,7 +871,7 @@
                               <img src={alt.imageStart} className="w-full h-full object-cover" alt="" />
                            </div>
                         ) : (
-                           <div className={`w-12 h-12 rounded-md flex-shrink-0 flex items-center justify-center ${t.bg} border ${t.border} text-[10px]`}>📹</div>
+                           <div className={`w-12 h-12 rounded-md flex-shrink-0 flex items-center justify-center ${t.bg} border ${t.border} text-[10px]`}>💪</div>
                         )}
                         <div><div className={`font-bold ${t.text}`}>{alt.name}</div><div className={`text-xs ${t.subtext} mt-1`}>{alt.category} • {alt.equipment}</div></div>
                       </div>
@@ -590,16 +886,62 @@
       };
 
       const renderSummaryView = () => {
-        const elapsedMinutes = workoutStartTime ? Math.round((Date.now() - workoutStartTime) / 60000) : 0;
+        const res = lastSummaryResult || { elapsedMinutes: 20, workoutNumber: 1, wonReward: false, rewardsWonThisCycle: 0, cycleCompleted: false };
+        
         return (
-          <div className={`flex flex-col h-full ${t.bg} p-6 justify-center items-center text-center`}>
-            <div className={`w-24 h-24 ${t.accent} bg-opacity-20 ${t.accentText} rounded-full flex justify-center items-center mb-8 border-4 ${t.accentBorder} text-4xl`}>🔥</div>
-            <h2 className={`text-4xl font-black ${t.text} mb-2`}>Workout<br/>Complete</h2>
-            <div className={`${t.card} border ${t.border} rounded-2xl p-6 w-full max-w-xs mt-6 mb-10 shadow-sm`}>
-              <div className={`text-xs font-bold uppercase tracking-widest mb-1 ${t.subtext}`}>Time Elapsed</div>
-              <div className={`text-3xl font-black ${t.text}`}>{elapsedMinutes} <span className={`text-lg ${t.subtext}`}>MIN</span></div>
+          <div className={`flex flex-col h-full ${t.bg} p-6 justify-center items-center text-center overflow-y-auto`}>
+            
+            {res.wonReward ? (
+              <div className="animate-pop w-full max-w-sm">
+                <div className="w-24 h-24 bg-emerald-500/20 text-emerald-400 rounded-full flex justify-center items-center mx-auto mb-5 border-4 border-emerald-500 text-5xl shadow-[0_0_40px_rgba(16,185,129,0.4)]">
+                  💸
+                </div>
+                <div className="inline-block bg-emerald-500 text-black font-black text-xs uppercase tracking-widest px-3 py-1 rounded-full mb-3">
+                  MYSTERY REWARD UNLOCKED!
+                </div>
+                <h2 className={`text-4xl font-black ${t.text} mb-2`}>YOU WON $5!</h2>
+                <p className={`text-sm ${t.subtext} mb-6`}>
+                  Workout #{res.workoutNumber} of 20 hit one of the 3 secret cash slots!
+                </p>
+
+                <a 
+                  href={getSmsLink()}
+                  className="w-full py-4 px-6 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-base rounded-2xl flex justify-center items-center gap-2 shadow-xl mb-4 active:scale-95 transition-transform"
+                >
+                  📲 TEXT DAD TO CLAIM $5
+                </a>
+              </div>
+            ) : (
+              <div className="animate-pop w-full max-w-sm">
+                <div className={`w-24 h-24 ${t.accent} bg-opacity-20 ${t.accentText} rounded-full flex justify-center items-center mx-auto mb-6 border-4 ${t.accentBorder} text-5xl`}>
+                  🎉
+                </div>
+                <h2 className={`text-4xl font-black ${t.text} mb-2`}>Workout<br/>Complete!</h2>
+                <p className={`text-sm ${t.subtext} mb-6`}>
+                  {res.cycleCompleted 
+                    ? "You finished all 20 workouts! A brand new 20-workout card with 3 new $5 rewards starts tomorrow!" 
+                    : `Punch #${res.workoutNumber} of 20 logged! Keep going to find the remaining ${3 - res.rewardsWonThisCycle} mystery $5 rewards.`}
+                </p>
+              </div>
+            )}
+
+            <div className={`${t.card} border ${t.border} rounded-2xl p-5 w-full max-w-sm mb-8 shadow-sm grid grid-cols-2 divide-x ${t.border}`}>
+              <div>
+                <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${t.subtext}`}>Time Logged</div>
+                <div className={`text-2xl font-black ${t.text}`}>{res.elapsedMinutes} <span className={`text-xs ${t.subtext}`}>MIN</span></div>
+              </div>
+              <div>
+                <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${t.subtext}`}>Punch Card</div>
+                <div className={`text-2xl font-black ${t.accentText}`}>{res.workoutNumber}<span className={`text-xs ${t.subtext}`}>/20</span></div>
+              </div>
             </div>
-            <button onClick={() => setCurrentView('setup')} className={`w-full py-5 ${t.card} ${t.text} font-black text-lg rounded-2xl flex justify-center items-center gap-3 border ${t.border}`}>🏠 RETURN HOME</button>
+
+            <button 
+              onClick={() => setCurrentView('setup')} 
+              className={`w-full max-w-sm py-4 ${t.card} ${t.text} font-black text-base rounded-2xl flex justify-center items-center gap-2 border ${t.border}`}
+            >
+              🏠 RETURN HOME
+            </button>
           </div>
         );
       };
@@ -609,6 +951,7 @@
           <div className={`w-full max-w-md h-screen relative shadow-2xl overflow-hidden flex flex-col ${t.bg}`}>
             {currentView === 'setup' && renderSetupView()}
             {currentView === 'workout' && renderWorkoutView()}
+            {currentView === 'history' && renderHistoryView()}
             {currentView === 'summary' && renderSummaryView()}
           </div>
         </div>
